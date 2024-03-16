@@ -20,12 +20,12 @@ const pool = mysql.createPool({
     database: process.env.DB_DATABASE
 });
 
-// Create phonebook table if it doesn't exist
-const createPhonebookTable = () => {
-    pool.query(`CREATE TABLE IF NOT EXISTS phonebook (
+// Create contacts table if it doesn't exist
+const createcontactsTable = () => {
+    pool.query(`CREATE TABLE IF NOT EXISTS contacts (
         contact_id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
-        phone_number VARCHAR(15) NOT NULL,
+        PhoneNumber VARCHAR(15) NOT NULL,
         email VARCHAR(100),
         address VARCHAR(255),
         organization VARCHAR(100),
@@ -36,15 +36,60 @@ const createPhonebookTable = () => {
         tags VARCHAR(255)
     )`, (error, results, fields) => {
         if (error) {
-            console.error('Error creating phonebook table:', error);
+            console.error('Error creating contacts table:', error);
         } else {
-            console.log('Phonebook table created or already exists');
+            console.log('contacts table created or already exists');
         }
     });
 };
 
 // Initialize database
-createPhonebookTable();
+createcontactsTable();
+
+
+const createRelationshipsTable = () => {
+    pool.query(`CREATE TABLE IF NOT EXISTS relationships (
+        relationship_id INT AUTO_INCREMENT PRIMARY KEY,
+        person1_id INT NOT NULL,
+        person2_id INT NOT NULL,
+        relationship_type VARCHAR(100) NOT NULL,
+        FOREIGN KEY (person1_id) REFERENCES contacts(contact_id),
+        FOREIGN KEY (person2_id) REFERENCES contacts(contact_id)
+    )`, (error, results, fields) => {
+        if (error) {
+            console.error('Error creating relationships table:', error);
+        } else {
+            console.log('Relationships table created or already exists');
+        }
+    });
+};
+
+// Initialize database
+createRelationshipsTable();
+// API endpoint to get all relationships of a selected person
+app.get('/relationships/:personId', (req, res) => {
+    const { personId } = req.params;
+    const query = `
+        SELECT r1.person1_id AS person1, r1.person2_id AS person2, r1.relationship_type AS relationship_type1, r2.relationship_type AS relationship_type2
+        FROM relationships r1
+        INNER JOIN relationships r2 ON r1.person1_id = r2.person2_id AND r1.person2_id = r2.person1_id
+        WHERE (r1.person1_id = ? OR r1.person2_id = ?) AND (r1.relationship_type <> r2.relationship_type)
+    `;
+    pool.query(query, [personId, personId], (error, results) => {
+        if (error) {
+            console.error('Error fetching relationships:', error);
+            return res.status(500).json({ error: 'Error fetching relationships.' });
+        }
+        
+        const relationships = [];
+        results.forEach(row => {
+            const { person1, person2, relationship_type1, relationship_type2 } = row;
+            relationships.push({ person1, person2, relationship_type1, relationship_type2 });
+        });
+
+        res.json(relationships);
+    });
+});
 
 // Get all contacts
 app.get('/contacts', (req, res) => {
@@ -65,15 +110,53 @@ app.get('/contacts/:id', (req, res) => {
 
 // Create a new contact
 app.post('/contacts', (req, res) => {
-    const { Name, PhoneNumber } = req.body;
+    const { 
+        Name, 
+        PhoneNumber,
+        email,
+        address,
+        organization,
+        job_title,
+        date_of_birth,
+        website_url,
+        notes,
+        tags
+    } = req.body;
     
-    // Check if Name and PhoneNumber are provided
+    // Check if required parameters are provided
     if (!Name || !PhoneNumber) {
         return res.status(400).json({ error: 'Name and PhoneNumber are required.' });
     }
     
     // Insert the contact into the database
-    pool.query('INSERT INTO Contacts (Name, PhoneNumber) VALUES (?, ?)', [Name, PhoneNumber], (error, results) => {
+    const query = `
+        INSERT INTO Contacts (
+            Name, 
+            PhoneNumber,
+            email,
+            address,
+            organization,
+            job_title,
+            date_of_birth,
+            website_url,
+            notes,
+            tags
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    const values = [
+        Name, 
+        PhoneNumber,
+        email,
+        address,
+        organization,
+        job_title,
+        date_of_birth,
+        website_url,
+        notes,
+        tags
+    ];
+
+    pool.query(query, values, (error, results) => {
         if (error) {
             console.error('Error inserting contact:', error);
             return res.status(500).json({ error: 'Error creating contact.' });
@@ -82,25 +165,62 @@ app.post('/contacts', (req, res) => {
     });
 });
 
-
 // Update an existing contact
 app.put('/contacts/:id', (req, res) => {
     const { id } = req.params;
-    const { Name, PhoneNumber } = req.body;
-    pool.query('UPDATE Contacts SET Name = ?, PhoneNumber = ? WHERE ContactID = ?', [Name, PhoneNumber, id], (error, results) => {
-        if (error) throw error;
+    const { Name, PhoneNumber, email, address, organization, job_title, date_of_birth, website_url, notes, tags } = req.body;
+    const query = `
+        UPDATE contacts 
+        SET 
+            name = ?, 
+            PhoneNumber = ?,
+            email = ?,
+            address = ?,
+            organization = ?,
+            job_title = ?,
+            date_of_birth = ?,
+            website_url = ?,
+            notes = ?,
+            tags = ?
+        WHERE contact_id = ?
+    `;
+    const values = [
+        Name, 
+        PhoneNumber,
+        email,
+        address,
+        organization,
+        job_title,
+        date_of_birth,
+        website_url,
+        notes,
+        tags,
+        id
+    ];
+
+    pool.query(query, values, (error, results) => {
+        if (error) {
+            console.error('Error updating contact:', error);
+            return res.status(500).json({ error: 'Error updating contact.' });
+        }
         res.send('Contact updated successfully.');
     });
 });
 
+
+// Delete a contact
 // Delete a contact
 app.delete('/contacts/:id', (req, res) => {
     const { id } = req.params;
-    pool.query('DELETE FROM Contacts WHERE ContactID = ?', [id], (error, results) => {
-        if (error) throw error;
+    pool.query('DELETE FROM contacts WHERE contact_id = ?', [id], (error, results) => {
+        if (error) {
+            console.error('Error deleting contact:', error);
+            return res.status(500).json({ error: 'Error deleting contact.' });
+        }
         res.send('Contact deleted successfully.');
     });
 });
+
 
 // Start server
 app.listen(port, () => console.log(`PhoneBook API running on http://localhost:${port}`));
