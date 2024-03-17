@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'about_page.dart';
+import 'add_contact.dart';
 
 void main() {
   runApp(const MyApp());
@@ -72,11 +74,25 @@ class _MyHomePageState extends State<MyHomePage> {
             title: Text(contacts[index].name),
             subtitle: Text(contacts[index].email),
             trailing: Text(contacts[index].phone),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      AboutPage(contactId: contacts[index].id),
+                ),
+              );
+            },
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AddContact()),
+          );
+        },
         child: const Icon(Icons.add),
       ),
     );
@@ -88,7 +104,6 @@ class Contact {
   final String name;
   final String email;
   final String phone;
-
   Contact({
     required this.id,
     required this.name,
