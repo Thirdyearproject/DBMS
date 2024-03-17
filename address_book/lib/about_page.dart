@@ -15,6 +15,13 @@ class AboutPage extends StatelessWidget {
         centerTitle: true,
         backgroundColor: Colors.blue,
         elevation: 0,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pushNamed(context, '/edit-contact',
+                arguments: contactId), // Navigate to edit page
+            child: const Text('Modify', style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
       body: FutureBuilder(
         future: _fetchAbout(contactId),
