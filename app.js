@@ -166,6 +166,7 @@ app.post('/contacts', (req, res) => {
         tags,
         relationship_type // New: Added relationship_type to the request body
     } = req.body;
+
     // Insert address
     pool.query('INSERT INTO addresses (locality, city, state, pin_code) VALUES (?, ?, ?, ?)', [locality, city, state, pin_code], (error, addressResult) => {
         if (error) {
@@ -213,7 +214,6 @@ app.post('/contacts', (req, res) => {
 });
 app.put('/contacts/:id', (req, res) => {
     const { id } = req.params;
-    const { 
     const { name, phone_number_id, email_id, address_id, organization, job_title, date_of_birth, website_url, notes, tags } = req.body;
     const query = `
         UPDATE contacts 
