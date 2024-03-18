@@ -79,7 +79,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       body: contacts.isEmpty && !isLoading
-          ? Center(
+          ? const Center(
               child: Text(
                 'No contacts found.', // Display message if no contacts
               ),
@@ -108,7 +108,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 Expanded(
                   child: isLoading
-                      ? Center(
+                      ? const Center(
                           child:
                               CircularProgressIndicator(), // Display loading indicator
                         )

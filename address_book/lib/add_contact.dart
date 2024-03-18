@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class AddContact extends StatefulWidget {
-  const AddContact({Key? key}) : super(key: key);
+  const AddContact({super.key});
 
   @override
   State<AddContact> createState() => _AddContactState();
@@ -73,7 +73,7 @@ class _AddContactState extends State<AddContact> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 16),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: TextFormField(
                         controller: _cityController,
@@ -95,7 +95,7 @@ class _AddContactState extends State<AddContact> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 16),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: TextFormField(
                         controller: _pinCodeController,
@@ -129,7 +129,7 @@ class _AddContactState extends State<AddContact> {
                         },
                       ),
                     ),
-                    SizedBox(width: 16),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: TextFormField(
                         controller: _phoneTypeController,
@@ -151,7 +151,7 @@ class _AddContactState extends State<AddContact> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 16),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: TextFormField(
                         controller: _emailTypeController,
@@ -173,7 +173,7 @@ class _AddContactState extends State<AddContact> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 16),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: TextFormField(
                         controller: _jobTitleController,
@@ -195,7 +195,7 @@ class _AddContactState extends State<AddContact> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 16),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: TextFormField(
                         controller: _websiteUrlController,
@@ -217,7 +217,7 @@ class _AddContactState extends State<AddContact> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 16),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: TextFormField(
                         controller: _tagsController,
