@@ -129,6 +129,14 @@ app.get('/contacts', (req, res) => {
     });
 });
 
+// Get all names and id
+app.get('/IDnamescontacts', (req, res) => {
+    pool.query('SELECT contact_id, name FROM contacts', (error, results) => {
+        if (error) throw error;
+        res.send(results);
+    });
+});
+
 // Get a single contact by ID
 app.get('/contacts/:id', (req, res) => {
     const { id } = req.params;
@@ -158,7 +166,6 @@ app.post('/contacts', (req, res) => {
         tags,
         relationship_type // New: Added relationship_type to the request body
     } = req.body;
-    console.log(req)
     // Insert address
     pool.query('INSERT INTO addresses (locality, city, state, pin_code) VALUES (?, ?, ?, ?)', [locality, city, state, pin_code], (error, addressResult) => {
         if (error) {
@@ -204,126 +211,45 @@ app.post('/contacts', (req, res) => {
         });
     });
 });
-
-// PUT endpoint to update contact and related tables
 app.put('/contacts/:id', (req, res) => {
     const { id } = req.params;
     const { 
+    const { name, phone_number_id, email_id, address_id, organization, job_title, date_of_birth, website_url, notes, tags } = req.body;
+    const query = `
+        UPDATE contacts 
+        SET 
+            name = ?, 
+            phone_number_id = ?,
+            email_id = ?,
+            address_id = ?,
+            organization = ?,
+            job_title = ?,
+            date_of_birth = ?,
+            website_url = ?,
+            notes = ?,
+            tags = ?
+        WHERE contact_id = ?
+    `;
+    const values = [
         name, 
-        address, 
-        phone_number, 
-        email, 
-        organization, 
-        job_title, 
-        date_of_birth, 
-        website_url, 
-        notes, 
+        phone_number_id,
+        email_id,
+        address_id,
+        organization,
+        job_title,
+        date_of_birth,
+        website_url,
+        notes,
         tags,
-        relationship_type // This variable is needed but seems not defined
-    } = req.body;
-    // Begin transaction
-    pool.getConnection((err, connection) => {
-        if (err) {
-            console.error('Error getting database connection:', err);
+        id
+    ];
+
+    pool.query(query, values, (error, results) => {
+        if (error) {
+            console.error('Error updating contact:', error);
             return res.status(500).json({ error: 'Error updating contact.' });
         }
-
-        connection.beginTransaction(err => {
-            if (err) {
-                console.error('Error starting transaction:', err);
-                connection.release();
-                return res.status(500).json({ error: 'Error updating contact.' });
-            }
-
-            // Update contact details
-            connection.query(
-                'UPDATE contacts SET name = ?, organization = ?, job_title = ?, date_of_birth = ?, website_url = ?, notes = ?, tags = ? WHERE contact_id = ?', 
-                [name, organization, job_title, date_of_birth, website_url, notes, tags, id], 
-                (error, results) => {
-                    if (error) {
-                        console.error('Error updating contact:', error);
-                        return connection.rollback(() => {
-                            connection.release();
-                            res.status(500).json({ error: 'Error updating contact.' });
-                        });
-                    }
-
-                    // Update address
-                    connection.query(
-                        'UPDATE addresses SET locality = ?, city = ?, state = ?, pin_code = ? WHERE address_id = ?', 
-                        [address.locality, address.city, address.state, address.pin_code, address.address_id], 
-                        (error, results) => {
-                            if (error) {
-                                console.error('Error updating address:', error);
-                                return connection.rollback(() => {
-                                    connection.release();
-                                    res.status(500).json({ error: 'Error updating address.' });
-                                });
-                            }
-
-                            // Update phone number
-                            connection.query(
-                                'UPDATE phone_numbers SET phone_number = ?, type = ? WHERE phone_number_id = ?', 
-                                [phone_number.phone_number, phone_number.type, phone_number.phone_number_id], 
-                                (error, results) => {
-                                    if (error) {
-                                        console.error('Error updating phone number:', error);
-                                        return connection.rollback(() => {
-                                            connection.release();
-                                            res.status(500).json({ error: 'Error updating phone number.' });
-                                        });
-                                    }
-                                    // Update email
-                                    connection.query(
-                                        'UPDATE emails SET email_address = ?, type = ? WHERE email_id = ?', 
-                                        [email.email_address, email.type, email.email_id], 
-                                        (error, results) => {
-                                            if (error) {
-                                                console.error('Error updating email:', error);
-                                                return connection.rollback(() => {
-                                                    connection.release();
-                                                    res.status(500).json({ error: 'Error updating email.' });
-                                                });
-                                            }
-
-                                            // Update relationships
-                                            connection.query(
-                                                'UPDATE relationships SET relationship_type = ? WHERE person_id = ?', 
-                                                [relationship_type, id], 
-                                                (error, results) => {
-                                                    if (error) {
-                                                        console.error('Error updating relationship:', error);
-                                                        return connection.rollback(() => {
-                                                            connection.release();
-                                                            res.status(500).json({ error: 'Error updating relationship.' });
-                                                        });
-                                                    }
-
-                                                    // Commit transaction
-                                                    connection.commit(err => {
-                                                        if (err) {
-                                                            console.error('Error committing transaction:', err);
-                                                            return connection.rollback(() => {
-                                                                connection.release();
-                                                                res.status(500).json({ error: 'Error updating contact.' });
-                                                            });
-                                                        }
-
-                                                        // Release connection
-                                                        connection.release();
-                                                        res.send('Contact and associated details updated successfully.');
-                                                    });
-                                                }
-                                            );
-                                        }
-                                    );
-                                }
-                            );
-                        }
-                    );
-                }
-            );
-        });
+        res.send('Contact updated successfully.');
     });
 });
 
@@ -332,60 +258,23 @@ app.put('/contacts/:id', (req, res) => {
 app.delete('/contacts/:id', (req, res) => {
     const { id } = req.params;
 
-    // First, retrieve associated contact details to get corresponding IDs
-    pool.query('SELECT address_id, phone_number_id, email_id FROM contacts WHERE contact_id = ?', [id], (error, contactResults) => {
+    // Delete corresponding relationship entries in the relationships table first
+    pool.query('DELETE FROM relationships WHERE person_id = ? OR person_id = ?', [id, id], (error, relationshipResults) => {
         if (error) {
-            console.error('Error retrieving contact details:', error);
-            return res.status(500).json({ error: 'Error retrieving contact details.' });
+            console.error('Error deleting relationships:', error);
+            return res.status(500).json({ error: 'Error deleting relationships.' });
         }
 
-        // Extract IDs
-        const { address_id, phone_number_id, email_id } = contactResults[0];
-
-        // Delete corresponding relationship entries in the relationships table first
-        pool.query('DELETE FROM relationships WHERE person_id = ? OR person_id = ?', [id, id], (error, relationshipResults) => {
+        // Once relationships are deleted, proceed to delete the contact
+        pool.query('DELETE FROM contacts WHERE contact_id = ?', [id], (error, contactResults) => {
             if (error) {
-                console.error('Error deleting relationships:', error);
-                return res.status(500).json({ error: 'Error deleting relationships.' });
+                console.error('Error deleting contact:', error);
+                return res.status(500).json({ error: 'Error deleting contact.' });
             }
-
-            // Once relationships are deleted, proceed to delete contact details
-            pool.query('DELETE FROM contacts WHERE contact_id = ?', [id], (error, contactDeleteResult) => {
-                if (error) {
-                    console.error('Error deleting contact:', error);
-                    return res.status(500).json({ error: 'Error deleting contact.' });
-                }
-
-                // Delete associated address
-                pool.query('DELETE FROM addresses WHERE address_id = ?', [address_id], (error, addressDeleteResult) => {
-                    if (error) {
-                        console.error('Error deleting address:', error);
-                        return res.status(500).json({ error: 'Error deleting address.' });
-                    }
-
-                    // Delete associated phone number
-                    pool.query('DELETE FROM phone_numbers WHERE phone_number_id = ?', [phone_number_id], (error, phoneDeleteResult) => {
-                        if (error) {
-                            console.error('Error deleting phone number:', error);
-                            return res.status(500).json({ error: 'Error deleting phone number.' });
-                        }
-
-                        // Delete associated email
-                        pool.query('DELETE FROM emails WHERE email_id = ?', [email_id], (error, emailDeleteResult) => {
-                            if (error) {
-                                console.error('Error deleting email:', error);
-                                return res.status(500).json({ error: 'Error deleting email.' });
-                            }
-
-                            res.send('Contact and associated details deleted successfully.');
-                        });
-                    });
-                });
-            });
+            res.send('Contact deleted successfully.');
         });
     });
 });
-
 
 app.get('/relationships/:personId', (req, res) => {
     const { personId } = req.params;
