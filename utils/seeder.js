@@ -22,10 +22,10 @@ const seedDatabase = () => {
             "city": "Anytown",
             "state": "AnyState",
             "pin_code": "12345",
-            "phone_number": "1234567890",
-            "phone_type": "Mobile",
-            "email_address": "john@example.com",
-            "email_type": "Personal",
+            "phone_number1": "1234567890",
+            "phone_type1": "Mobile",
+            "email_address1": "john@example.com",
+            "email_type1": "Personal",
             "organization": "Example Company",
             "job_title": "CEO",
             "date_of_birth": "1990-01-01",
@@ -40,10 +40,10 @@ const seedDatabase = () => {
             "city": "Springfield",
             "state": "Illinois",
             "pin_code": "62701",
-            "phone_number": "9876543210",
-            "phone_type": "Home",
-            "email_address": "alice@example.com",
-            "email_type": "Work",
+            "phone_number1": "9876543210",
+            "phone_type1": "Home",
+            "email_address1": "alice@example.com",
+            "email_type1": "Work",
             "organization": "Tech Solutions Inc.",
             "job_title": "Software Engineer",
             "date_of_birth": "1985-09-15",
@@ -57,10 +57,10 @@ const seedDatabase = () => {
             "city": "Springfield",
             "state": "Illinois",
             "pin_code": "62701",
-            "phone_number": "555-123-4567",
-            "phone_type": "Home",
-            "email_address": "alice@example.com",
-            "email_type": "Work",
+            "phone_number1": "555-123-4567",
+            "phone_type1": "Home",
+            "email_address1": "alice@example.com",
+            "email_type1": "Work",
             "organization": "Tech Solutions Inc.",
             "job_title": "Software Engineer",
             "date_of_birth": "1985-09-15",
@@ -75,10 +75,10 @@ const seedDatabase = () => {
             "city": "Oakland",
             "state": "California",
             "pin_code": "94612",
-            "phone_number": "555-987-6543",
-            "phone_type": "Mobile",
-            "email_address": "bob@example.com",
-            "email_type": "Personal",
+            "phone_number1": "555-987-6543",
+            "phone_type1": "Mobile",
+            "email_address1": "bob@example.com",
+            "email_type1": "Personal",
             "organization": "ABC Corporation",
             "job_title": "Marketing Manager",
             "date_of_birth": "1978-04-25",
@@ -93,10 +93,10 @@ const seedDatabase = () => {
             "city": "Seattle",
             "state": "Washington",
             "pin_code": "98101",
-            "phone_number": "555-789-0123",
-            "phone_type": "Work",
-            "email_address": "emily@example.com",
-            "email_type": "Work",
+            "phone_number1": "555-789-0123",
+            "phone_type1": "Work",
+            "email_address1": "emily@example.com",
+            "email_type1": "Work",
             "organization": "XYZ Corporation",
             "job_title": "HR Manager",
             "date_of_birth": "1990-12-08",
@@ -111,10 +111,10 @@ const seedDatabase = () => {
             "city": "New York",
             "state": "New York",
             "pin_code": "10001",
-            "phone_number": "555-234-5678",
-            "phone_type": "Mobile",
-            "email_address": "david@example.com",
-            "email_type": "Personal",
+            "phone_number1": "555-234-5678",
+            "phone_type1": "Mobile",
+            "email_address1": "david@example.com",
+            "email_type1": "Personal",
             "organization": "Finance Solutions LLC",
             "job_title": "Financial Analyst",
             "date_of_birth": "1982-07-20",
@@ -129,10 +129,10 @@ const seedDatabase = () => {
             "city": "Boston",
             "state": "Massachusetts",
             "pin_code": "02108",
-            "phone_number": "555-345-6789",
-            "phone_type": "Home",
-            "email_address": "grace@example.com",
-            "email_type": "Work",
+            "phone_number1": "555-345-6789",
+            "phone_type1": "Home",
+            "email_address1": "grace@example.com",
+            "email_type1": "Work",
             "organization": "Law Firm LLP",
             "job_title": "Lawyer",
             "date_of_birth": "1975-03-12",
@@ -146,7 +146,7 @@ const seedDatabase = () => {
 
     // Loop through sample data and insert into database
     sampleData.forEach(data => {
-        const { name,locality, city, state, pin_code, phone_number, phone_type, email_address, email_type, organization, job_title, date_of_birth, website_url, notes, tags, relationship_type } = data;
+        const { name,locality, city, state, pin_code, phone_number1, phone_type1, email_address1, email_type1, organization, job_title, date_of_birth, website_url, notes, tags, relationship_type } = data;
         // Insert contact
         pool.query(
             'INSERT INTO contacts (name, organization, job_title, date_of_birth, website_url, notes, tags) VALUES (?, ?, ?, ?, ?, ?, ?)',
@@ -165,7 +165,7 @@ const seedDatabase = () => {
                         }
 
                         // Insert phone number
-                        pool.query('INSERT INTO phone_numbers (phone_contact_id,phone_number, type) VALUES (?,?, ?)', [contactResult.insertId,phone_number, phone_type],
+                        pool.query('INSERT INTO phone_numbers (phone_contact_id,phone_number1, type1) VALUES (?,?, ?)', [contactResult.insertId,phone_number1, phone_type1],
                             (error, phoneResult) => {
                                 if (error) {
                                     console.error('Error inserting phone number:', error);
@@ -173,7 +173,7 @@ const seedDatabase = () => {
                                 }
 
                                 // Insert email
-                                pool.query('INSERT INTO emails (email_contact_id,email_address, type) VALUES (?,?, ?)', [contactResult.insertId,email_address, email_type],
+                                pool.query('INSERT INTO emails (email_contact_id,email_address1, type1) VALUES (?,?, ?)', [contactResult.insertId,email_address1, email_type1],
                                     (error, emailResult) => {
                                         if (error) {
                                             console.error('Error inserting email:', error);

@@ -60,8 +60,12 @@ const createPhoneNumbersTable = () => {
     pool.query(`CREATE TABLE IF NOT EXISTS phone_numbers (
         phone_number_id INT AUTO_INCREMENT PRIMARY KEY,
         phone_contact_id INT,
-        phone_number VARCHAR(15) NOT NULL,
-        type VARCHAR(50),
+        phone_number1 VARCHAR(15)  ,
+        type1 VARCHAR(50),
+        phone_number2 VARCHAR(15)  ,
+        type2 VARCHAR(50),
+        phone_number3 VARCHAR(15)  ,
+        type3 VARCHAR(50),
         FOREIGN KEY (phone_contact_id) REFERENCES contacts(contact_id)
     )`, (error, results, fields) => {
         if (error) {
@@ -77,8 +81,12 @@ const createEmailsTable = () => {
     pool.query(`CREATE TABLE IF NOT EXISTS emails (
         email_id INT AUTO_INCREMENT PRIMARY KEY,
         email_contact_id INT,
-        email_address VARCHAR(100) NOT NULL,
-        type VARCHAR(50),
+        email_address1 VARCHAR(100)  ,
+        type1 VARCHAR(50),
+        email_address2 VARCHAR(100)  ,
+        type2 VARCHAR(50),
+        email_address3 VARCHAR(100)  ,
+        type3 VARCHAR(50),
         FOREIGN KEY (email_contact_id) REFERENCES contacts(contact_id)
     )`, (error, results, fields) => {
         if (error) {
@@ -123,10 +131,18 @@ app.post('/contacts', (req, res) => {
         city,
         state,
         pin_code,
-        phone_number,
-        phone_type,
-        email_address,
-        email_type,
+        phone_number1,
+        phone_type1,
+        phone_number2,
+        phone_type2,
+        phone_number3,
+        phone_type3,
+        email_address1,
+        email_type1,
+        email_address2,
+        email_type2,
+        email_address3,
+        email_type3,
         organization,
         job_title,
         date_of_birth,
@@ -149,14 +165,14 @@ app.post('/contacts', (req, res) => {
             }
 
             // Insert phone number
-            pool.query('INSERT INTO phone_numbers (phone_contact_id,phone_number, type) VALUES (?,?, ?)', [contactResult.insertId,phone_number, phone_type], (error, phoneResult) => {
+            pool.query('INSERT INTO phone_numbers (phone_contact_id, phone_number1, type1, phone_number2, type2, phone_number3, type3) VALUES (?, ?, ?, ?, ?, ?, ?)', [contactResult.insertId,phone_number1, phone_type1,phone_number2, phone_type2,phone_number3, phone_type3], (error, phoneResult) => {
                 if (error) {
                     console.error('Error inserting phone number:', error);
                     return res.status(500).json({ error: 'Error creating contact.' });
                 }
 
                 // Insert email
-                pool.query('INSERT INTO emails (email_contact_id,email_address, type) VALUES (?,?, ?)', [contactResult.insertId,email_address, email_type], (error, emailResult) => {
+                pool.query('INSERT INTO emails (email_contact_id, email_address1, type1, email_address2, type2, email_address3, type3) VALUES (?, ?, ?, ?, ?, ?, ?)', [contactResult.insertId,email_address1, email_type1,email_address2, email_type2,email_address3, email_type3], (error, emailResult) => {
                     if (error) {
                         console.error('Error inserting email:', error);
                         return res.status(500).json({ error: 'Error creating contact.' });
@@ -188,10 +204,18 @@ app.put('/contacts/:contactId', (req, res) => {
         city,
         state,
         pin_code,
-        phone_number,
-        phone_type,
-        email_address,
-        email_type,
+        phone_number1,
+        phone_type1,
+        phone_number2,
+        phone_type2,
+        phone_number3,
+        phone_type3,
+        email_address1,
+        email_type1,
+        email_address2,
+        email_type2,
+        email_address3,
+        email_type3,
         organization,
         job_title,
         date_of_birth,
@@ -216,14 +240,14 @@ app.put('/contacts/:contactId', (req, res) => {
             }
 
             // Update phone number
-            pool.query('UPDATE phone_numbers SET phone_number=?, type=? WHERE phone_contact_id=?', [phone_number, phone_type, contactId], (error, phoneResult) => {
+            pool.query('UPDATE phone_numbers SET phone_number1=?, type1=?,phone_number2=?, type2=?,phone_number3=?, type3=? WHERE phone_contact_id=?', [phone_number1, phone_type1,phone_number2, phone_type2,phone_number3, phone_type3, contactId], (error, phoneResult) => {
                 if (error) {
                     console.error('Error updating phone number:', error);
                     return res.status(500).json({ error: 'Error updating phone number.' });
                 }
 
                 // Update email
-                pool.query('UPDATE emails SET email_address=?, type=? WHERE email_contact_id=?', [email_address, email_type, contactId], (error, emailResult) => {
+                pool.query('UPDATE emails SET email_address1=?, type1=?,email_address2=?, type2=?,email_address3=?, type3=? WHERE email_contact_id=?', [email_address1, email_type1,email_address2, email_type2,email_address3, email_type3, contactId], (error, emailResult) => {
                     if (error) {
                         console.error('Error updating email:', error);
                         return res.status(500).json({ error: 'Error updating email.' });
@@ -291,42 +315,28 @@ app.delete('/contacts/:contactId', (req, res) => {
 
 // Get all contacts
 app.get('/contacts', (req, res) => {
-    // Query to retrieve all contact information with associated data from other tables
     const query = `
-        SELECT 
-            contacts.*,
-            addresses.locality,
-            addresses.city,
-            addresses.state,
-            addresses.pin_code,
-            phone_numbers.phone_number,
-            phone_numbers.type AS phone_type,
-            emails.email_address,
-            emails.type AS email_type,
-            relationships.relationship_type
-        FROM 
-            contacts
-        LEFT JOIN 
-            addresses ON contacts.contact_id = addresses.Address_contact_id
-        LEFT JOIN 
-            phone_numbers ON contacts.contact_id = phone_numbers.phone_contact_id
-        LEFT JOIN 
-            emails ON contacts.contact_id = emails.email_contact_id
-        LEFT JOIN 
-            relationships ON contacts.contact_id = relationships.person_id
+        SELECT c.*, 
+               a.*, 
+               p.*, 
+               e.*, 
+               r.relationship_type 
+        FROM contacts c
+        LEFT JOIN addresses a ON c.contact_id = a.Address_contact_id
+        LEFT JOIN phone_numbers p ON c.contact_id = p.phone_contact_id
+        LEFT JOIN emails e ON c.contact_id = e.email_contact_id
+        LEFT JOIN relationships r ON c.contact_id = r.person_id
     `;
 
-    // Execute the query
     pool.query(query, (error, results) => {
         if (error) {
             console.error('Error retrieving contacts:', error);
-            return res.status(500).json({ error: 'Error retrieving contacts.' });
+            res.status(500).json({ error: 'Internal server error' });
+        } else {
+            res.json(results);
         }
-        // Send the results as JSON response
-        res.status(200).json({ contacts: results });
     });
 });
-
 // Get all emails
 app.get('/emails', (req, res) => {
     pool.query('SELECT * FROM emails', (error, results) => {
@@ -354,46 +364,31 @@ app.get('/IdNamesContacts', (req, res) => {
 // Get a single contact by ID
 app.get('/contacts/:contactId', (req, res) => {
     const contactId = req.params.contactId;
-
-    // Query to retrieve data for the selected contact with associated data from other tables
     const query = `
-        SELECT 
-            contacts.*,
-            addresses.locality,
-            addresses.city,
-            addresses.state,
-            addresses.pin_code,
-            phone_numbers.phone_number,
-            phone_numbers.type AS phone_type,
-            emails.email_address,
-            emails.type AS email_type,
-            relationships.relationship_type
-        FROM 
-            contacts
-        LEFT JOIN 
-            addresses ON contacts.contact_id = addresses.Address_contact_id
-        LEFT JOIN 
-            phone_numbers ON contacts.contact_id = phone_numbers.phone_contact_id
-        LEFT JOIN 
-            emails ON contacts.contact_id = emails.email_contact_id
-        LEFT JOIN 
-            relationships ON contacts.contact_id = relationships.person_id
-        WHERE
-            contacts.contact_id = ?
+        SELECT c.*, 
+               a.*, 
+               p.*, 
+               e.*, 
+               r.relationship_type 
+        FROM contacts c
+        LEFT JOIN addresses a ON c.contact_id = a.Address_contact_id
+        LEFT JOIN phone_numbers p ON c.contact_id = p.phone_contact_id
+        LEFT JOIN emails e ON c.contact_id = e.email_contact_id
+        LEFT JOIN relationships r ON c.contact_id = r.person_id
+        WHERE c.contact_id = ?
     `;
 
-    // Execute the query with the contactId parameter
     pool.query(query, [contactId], (error, results) => {
         if (error) {
             console.error('Error retrieving contact:', error);
-            return res.status(500).json({ error: 'Error retrieving contact.' });
+            res.status(500).json({ error: 'Internal server error' });
+        } else {
+            if (results.length === 0) {
+                res.status(404).json({ error: 'Contact not found' });
+            } else {
+                res.json(results[0]); // Return the first result (assuming contact_id is unique)
+            }
         }
-        // If the contact is not found, return a 404 status code with an error message
-        if (results.length === 0) {
-            return res.status(404).json({ error: 'Contact not found.' });
-        }
-        // Send the results for the selected contact as a JSON response
-        res.status(200).json({ contact: results[0] });
     });
 });
 
