@@ -129,6 +129,20 @@ app.get('/contacts', (req, res) => {
     });
 });
 
+app.get('/emails', (req, res) => {
+    pool.query('SELECT * FROM emails', (error, results) => {
+        if (error) throw error;
+        res.send(results);
+    });
+});
+
+app.get('/phone_numbers', (req, res) => {
+    pool.query('SELECT * FROM phone_numbers', (error, results) => {
+        if (error) throw error;
+        res.send(results);
+    });
+});
+
 // Get all names and id
 app.get('/IDnamescontacts', (req, res) => {
     pool.query('SELECT contact_id, name FROM contacts', (error, results) => {
