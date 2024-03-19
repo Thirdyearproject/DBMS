@@ -1,17 +1,31 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-import 'about_page.dart';
+import 'about_page.dart'; // Import the about page (if applicable)
 import 'add_contact.dart';
+import 'update_contact.dart'; // Import the update contact page
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final windowSize = Size(
+    3.0 *
+        WidgetsBinding.instance!.window.physicalSize.width /
+        WidgetsBinding.instance!.window.devicePixelRatio,
+    5.0 *
+        WidgetsBinding.instance!.window.physicalSize.height /
+        WidgetsBinding.instance!.window.devicePixelRatio,
+  );
+  await SystemChannels.platform.invokeMethod('setWindowSize', {
+    'width': windowSize.width.toInt(),
+    'height': windowSize.height.toInt(),
+  });
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -29,7 +43,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage({Key? key, required this.title}) : super(key: key);
 
   final String title;
 
@@ -38,7 +52,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<Contact> contacts = [];
+  List<Contact> contacts = []; // List to store Contact objects
   String searchQuery = '';
   bool isLoading = false; // Flag to track loading state
 
@@ -65,6 +79,16 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  _deleteContact(int id) async {
+    final response =
+        await http.delete(Uri.parse('http://localhost:3000/contacts/$id'));
+    if (response.statusCode == 200) {
+      _fetchContacts(); // Refresh contacts list after deletion
+    } else {
+      throw Exception('Failed to delete contact');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -78,77 +102,104 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ),
       ),
-      body: contacts.isEmpty && !isLoading
-          ? const Center(
-              child: Text(
-                'No contacts found.', // Display message if no contacts
-              ),
-            )
-          : Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextField(
-                    onChanged: (value) => setState(() => searchQuery = value),
-                    decoration: InputDecoration(
-                      hintText: 'Search contacts',
-                      prefixIcon: const Icon(Icons.search),
-                      filled: true,
-                      fillColor: Colors.grey[200],
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10.0),
-                        borderSide: const BorderSide(
-                          color: Colors.transparent,
-                          style: BorderStyle.none,
+      body: Container(
+        child: contacts.isEmpty && !isLoading
+            ? const Center(
+                child: Text(
+                  'No contacts found.', // Display message if no contacts
+                ),
+              )
+            : Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextField(
+                      onChanged: (value) => setState(() => searchQuery =
+                          value.toLowerCase()), // Lowercase search term
+                      decoration: InputDecoration(
+                        hintText: 'Search contacts',
+                        prefixIcon: const Icon(Icons.search),
+                        filled: true,
+                        fillColor: Colors.grey[200],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                          borderSide: const BorderSide(
+                            color: Colors.transparent,
+                            style: BorderStyle.none,
+                          ),
                         ),
+                        contentPadding: const EdgeInsets.all(15.0),
                       ),
-                      contentPadding: const EdgeInsets.all(15.0),
                     ),
                   ),
-                ),
-                Expanded(
-                  child: isLoading
-                      ? const Center(
-                          child:
-                              CircularProgressIndicator(), // Display loading indicator
-                        )
-                      : ListView.builder(
-                          itemCount: contacts.length,
-                          itemBuilder: (context, index) {
-                            final contact = contacts[index];
-                            if (searchQuery.isEmpty ||
-                                contact.name
-                                    .toLowerCase()
-                                    .contains(searchQuery.toLowerCase()) ||
-                                contact.email
-                                    .toLowerCase()
-                                    .contains(searchQuery.toLowerCase()) ||
-                                contact.phone
-                                    .toLowerCase()
-                                    .contains(searchQuery.toLowerCase())) {
-                              return ListTile(
-                                title: Text(contact.name),
-                                subtitle: Text(contact.email),
-                                trailing: Text(contact.phone),
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          AboutPage(contactId: contact.id),
+                  Expanded(
+                    child: isLoading
+                        ? const Center(
+                            child: CircularProgressIndicator(),
+                          )
+                        : ListView.builder(
+                            itemCount: contacts.length,
+                            itemBuilder: (context, index) {
+                              Contact contact = contacts[index];
+                              // Filter contacts based on lowercase search query
+                              if (contact.name
+                                  .toLowerCase()
+                                  .contains(searchQuery.toLowerCase())) {
+                                return MouseRegion(
+                                  onHover: (event) =>
+                                      setState(() => contact.isHovered = true),
+                                  onExit: (event) =>
+                                      setState(() => contact.isHovered = false),
+                                  child: Card(
+                                    child: ListTile(
+                                      leading: const CircleAvatar(
+                                        child: Icon(Icons.person),
+                                      ),
+                                      title: Text(
+                                        contact.name,
+                                        textAlign: contact.isHovered
+                                            ? TextAlign.left
+                                            : TextAlign.center,
+                                      ),
+                                      trailing: contact.isHovered
+                                          ? Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                IconButton(
+                                                  onPressed: () =>
+                                                      Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          UpdateContact(
+                                                              contactId:
+                                                                  contact.id),
+                                                    ),
+                                                  ),
+                                                  icon: const Icon(Icons.edit),
+                                                ),
+                                                IconButton(
+                                                  onPressed: () =>
+                                                      _deleteContact(
+                                                          contact.id),
+                                                  icon:
+                                                      const Icon(Icons.delete),
+                                                ),
+                                              ],
+                                            )
+                                          : null,
                                     ),
-                                  );
-                                },
-                              );
-                            } else {
-                              return const SizedBox
-                                  .shrink(); // Hide non-matching contacts
-                            }
-                          },
-                        ),
-                ),
-              ],
-            ),
+                                  ),
+                                );
+                              } else {
+                                return const SizedBox.shrink();
+                              }
+                            },
+                          ),
+                  ),
+                ],
+              ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
@@ -165,21 +216,16 @@ class _MyHomePageState extends State<MyHomePage> {
 class Contact {
   final int id;
   final String name;
-  final String email;
-  final String phone;
 
-  Contact(
-      {required this.id,
-      required this.name,
-      required this.email,
-      required this.phone});
+  // Add a new field to track hover state
+  bool isHovered = false;
+
+  Contact({required this.id, required this.name});
 
   factory Contact.fromJson(Map<String, dynamic> json) {
     return Contact(
-      id: json['id'],
+      id: json['contact_id'],
       name: json['name'],
-      email: json['email'],
-      phone: json['phone'],
     );
   }
 }
