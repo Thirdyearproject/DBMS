@@ -35,6 +35,24 @@ class _AddContactState extends State<AddContact> {
   final _relationshipTypeController = TextEditingController();
   final _tagsController = TextEditingController();
   final _notesController = TextEditingController();
+  DateTime? _selectedDate;
+
+  //date picker
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+        _dateOfBirthController.text =
+            '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -110,12 +128,6 @@ class _AddContactState extends State<AddContact> {
                         decoration: const InputDecoration(
                           labelText: 'Pin Code',
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a pin code';
-                          }
-                          return null;
-                        },
                       ),
                     ),
                   ],
@@ -289,6 +301,10 @@ class _AddContactState extends State<AddContact> {
                         decoration: const InputDecoration(
                           labelText: 'Date of Birth',
                         ),
+                        onTap: () {
+                          _selectDate(context);
+                        },
+                        readOnly: true,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -382,7 +398,8 @@ class _AddContactState extends State<AddContact> {
     final emailType3 = _emailType3Controller.text;
     final organization = _organizationController.text;
     final jobTitle = _jobTitleController.text;
-    final dateOfBirth = _dateOfBirthController.text;
+    final dateOfBirth =
+        _selectedDate != null ? _dateOfBirthController.text : null;
     final websiteUrl = _websiteUrlController.text;
     final relationshipType = _relationshipTypeController.text;
     final tags = _tagsController.text;
@@ -418,16 +435,14 @@ class _AddContactState extends State<AddContact> {
 
     // Send the request
     http
-        .post(
-      Uri.parse('http://localhost:3000/contacts'),
-      headers: {'Content-Type': 'application/json'},
-      body: body,
-    )
+        .post(Uri.parse('http://localhost:3000/contacts'),
+            headers: {'Content-Type': 'application/json'}, body: body)
         .then((response) {
       // Check the status code
       if (response.statusCode == 201) {
+        const SnackBar(content: Text('The contact was added successfully'));
         // The contact was added successfully
-        Navigator.pop(context);
+        Navigator.pushReplacementNamed(context, '/add-contact');
       } else {
         // There was an error adding the contact
         ScaffoldMessenger.of(context).showSnackBar(
@@ -458,7 +473,8 @@ class _AddContactState extends State<AddContact> {
     final emailType3 = _emailType3Controller.text;
     final organization = _organizationController.text;
     final jobTitle = _jobTitleController.text;
-    final dateOfBirth = _dateOfBirthController.text;
+    final dateOfBirth =
+        _selectedDate != null ? _dateOfBirthController.text : null;
     final websiteUrl = _websiteUrlController.text;
     final relationshipType = _relationshipTypeController.text;
     final tags = _tagsController.text;
@@ -494,23 +510,24 @@ class _AddContactState extends State<AddContact> {
 
     // Send the request
     http
-        .post(
-      Uri.parse('http://localhost:3000/contacts'),
-      headers: {'Content-Type': 'application/json'},
-      body: body,
-    )
+        .post(Uri.parse('http://localhost:3000/contacts'),
+            headers: {'Content-Type': 'application/json'}, body: body)
         .then((response) {
       // Check the status code
       if (response.statusCode == 201) {
+        const SnackBar(content: Text('The contact was added successfully'));
         // The contact was added successfully
-        Navigator.pop(context);
-        Navigator.pop(context);
+        Navigator.pop(context, true);
       } else {
         // There was an error adding the contact
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Error adding contact')),
         );
       }
+    }).catchError((error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error adding contact')),
+      );
     });
   }
 }

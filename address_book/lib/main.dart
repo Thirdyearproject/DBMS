@@ -1,25 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-import 'about_page.dart'; // Import the about page (if applicable)
+
 import 'add_contact.dart';
-import 'update_contact.dart'; // Import the update contact page
+import 'update_contact.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  final windowSize = Size(
-    3.0 *
-        WidgetsBinding.instance!.window.physicalSize.width /
-        WidgetsBinding.instance!.window.devicePixelRatio,
-    5.0 *
-        WidgetsBinding.instance!.window.physicalSize.height /
-        WidgetsBinding.instance!.window.devicePixelRatio,
-  );
-  await SystemChannels.platform.invokeMethod('setWindowSize', {
-    'width': windowSize.width.toInt(),
-    'height': windowSize.height.toInt(),
-  });
   runApp(const MyApp());
 }
 
@@ -38,6 +24,9 @@ class MyApp extends StatelessWidget {
         ),
       ),
       home: const MyHomePage(title: 'Flutter Desktop Address Book'),
+      routes: {
+        '/add-contact': (context) => const AddContact(),
+      },
     );
   }
 }
@@ -52,9 +41,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<Contact> contacts = []; // List to store Contact objects
+  List<Contact> contacts = [];
   String searchQuery = '';
-  bool isLoading = false; // Flag to track loading state
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -62,20 +51,21 @@ class _MyHomePageState extends State<MyHomePage> {
     _fetchContacts();
   }
 
-  _fetchContacts() async {
+  Future<void> _fetchContacts() async {
     setState(() {
-      isLoading = true; // Set loading state to true
+      isLoading = true;
     });
     final response =
         await http.get(Uri.parse('http://localhost:3000/contacts'));
     if (response.statusCode == 200) {
       Iterable l = json.decode(response.body);
-      contacts = List<Contact>.from(l.map((model) => Contact.fromJson(model)));
+      contacts = List<Contact>.from(
+          l.map((model) => Contact.fromJson(model)).toList());
     } else {
       throw Exception('Failed to load contacts');
     }
     setState(() {
-      isLoading = false; // Set loading state to false
+      isLoading = false;
     });
   }
 
@@ -83,7 +73,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final response =
         await http.delete(Uri.parse('http://localhost:3000/contacts/$id'));
     if (response.statusCode == 200) {
-      _fetchContacts(); // Refresh contacts list after deletion
+      _fetchContacts();
     } else {
       throw Exception('Failed to delete contact');
     }
@@ -93,7 +83,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true, // Center the title text
+        centerTitle: true,
         title: Text(
           widget.title,
           style: const TextStyle(
@@ -106,7 +96,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: contacts.isEmpty && !isLoading
             ? const Center(
                 child: Text(
-                  'No contacts found.', // Display message if no contacts
+                  'No contacts found.',
                 ),
               )
             : Column(
@@ -114,8 +104,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: TextField(
-                      onChanged: (value) => setState(() => searchQuery =
-                          value.toLowerCase()), // Lowercase search term
+                      onChanged: (value) =>
+                          setState(() => searchQuery = value.toLowerCase()),
                       decoration: InputDecoration(
                         hintText: 'Search contacts',
                         prefixIcon: const Icon(Icons.search),
@@ -141,7 +131,6 @@ class _MyHomePageState extends State<MyHomePage> {
                             itemCount: contacts.length,
                             itemBuilder: (context, index) {
                               Contact contact = contacts[index];
-                              // Filter contacts based on lowercase search query
                               if (contact.name
                                   .toLowerCase()
                                   .contains(searchQuery.toLowerCase())) {
@@ -166,16 +155,18 @@ class _MyHomePageState extends State<MyHomePage> {
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 IconButton(
-                                                  onPressed: () =>
-                                                      Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          UpdateContact(
-                                                              contactId:
-                                                                  contact.id),
-                                                    ),
-                                                  ),
+                                                  onPressed: () async {
+                                                    await Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            UpdateContact(
+                                                                contactId:
+                                                                    contact.id),
+                                                      ),
+                                                    );
+                                                    _fetchContacts(); // Refresh contacts list after updating
+                                                  },
                                                   icon: const Icon(Icons.edit),
                                                 ),
                                                 IconButton(
@@ -201,11 +192,9 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddContact()),
-          );
+        onPressed: () async {
+          await Navigator.pushNamed(context, '/add-contact');
+          _fetchContacts(); // Refresh contacts list after adding
         },
         child: const Icon(Icons.add),
       ),
@@ -216,8 +205,6 @@ class _MyHomePageState extends State<MyHomePage> {
 class Contact {
   final int id;
   final String name;
-
-  // Add a new field to track hover state
   bool isHovered = false;
 
   Contact({required this.id, required this.name});
