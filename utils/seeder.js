@@ -369,7 +369,7 @@ const deleteTables=()=>{
     deleteEmailsTable();
 }
 
-deleteTables();
-initializeTables();
+//deleteTables();
+//initializeTables();
 // Call the function to seed the database
 seedDatabase();

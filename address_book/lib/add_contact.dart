@@ -16,10 +16,18 @@ class _AddContactState extends State<AddContact> {
   final _cityController = TextEditingController();
   final _stateController = TextEditingController();
   final _pinCodeController = TextEditingController();
-  final _phoneNumberController = TextEditingController();
-  final _phoneTypeController = TextEditingController();
-  final _emailAddressController = TextEditingController();
-  final _emailTypeController = TextEditingController();
+  final _phoneNumber1Controller = TextEditingController();
+  final _phoneType1Controller = TextEditingController();
+  final _phoneNumber2Controller = TextEditingController();
+  final _phoneType2Controller = TextEditingController();
+  final _phoneNumber3Controller = TextEditingController();
+  final _phoneType3Controller = TextEditingController();
+  final _emailAddress1Controller = TextEditingController();
+  final _emailType1Controller = TextEditingController();
+  final _emailAddress2Controller = TextEditingController();
+  final _emailType2Controller = TextEditingController();
+  final _emailAddress3Controller = TextEditingController();
+  final _emailType3Controller = TextEditingController();
   final _organizationController = TextEditingController();
   final _jobTitleController = TextEditingController();
   final _dateOfBirthController = TextEditingController();
@@ -117,9 +125,9 @@ class _AddContactState extends State<AddContact> {
                   children: [
                     Expanded(
                       child: TextFormField(
-                        controller: _phoneNumberController,
+                        controller: _phoneNumber1Controller,
                         decoration: const InputDecoration(
-                          labelText: 'Phone Number',
+                          labelText: 'Phone Number 1',
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -132,9 +140,9 @@ class _AddContactState extends State<AddContact> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: TextFormField(
-                        controller: _phoneTypeController,
+                        controller: _phoneType1Controller,
                         decoration: const InputDecoration(
-                          labelText: 'Phone Type',
+                          labelText: 'Phone1 Type',
                         ),
                       ),
                     ),
@@ -145,18 +153,106 @@ class _AddContactState extends State<AddContact> {
                   children: [
                     Expanded(
                       child: TextFormField(
-                        controller: _emailAddressController,
+                        controller: _phoneNumber2Controller,
                         decoration: const InputDecoration(
-                          labelText: 'Email Address',
+                          labelText: 'Phone Number 2',
                         ),
                       ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: TextFormField(
-                        controller: _emailTypeController,
+                        controller: _phoneType2Controller,
                         decoration: const InputDecoration(
-                          labelText: 'Email Type',
+                          labelText: 'Phone2 Type',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _phoneNumber3Controller,
+                        decoration: const InputDecoration(
+                          labelText: 'Phone Number 3',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _phoneType3Controller,
+                        decoration: const InputDecoration(
+                          labelText: 'Phone3 Type',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _emailAddress1Controller,
+                        decoration: const InputDecoration(
+                          labelText: 'Email Address1',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _emailType1Controller,
+                        decoration: const InputDecoration(
+                          labelText: 'Email1 Type',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _emailAddress2Controller,
+                        decoration: const InputDecoration(
+                          labelText: 'Email Address2',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _emailType2Controller,
+                        decoration: const InputDecoration(
+                          labelText: 'Email2 Type',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _emailAddress3Controller,
+                        decoration: const InputDecoration(
+                          labelText: 'Email Address3',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _emailType3Controller,
+                        decoration: const InputDecoration(
+                          labelText: 'Email3 Type',
                         ),
                       ),
                     ),
@@ -272,10 +368,18 @@ class _AddContactState extends State<AddContact> {
     final city = _cityController.text;
     final state = _stateController.text;
     final pinCode = _pinCodeController.text;
-    final phoneNumber = _phoneNumberController.text;
-    final phoneType = _phoneTypeController.text;
-    final emailAddress = _emailAddressController.text;
-    final emailType = _emailTypeController.text;
+    final phoneNumber1 = _phoneNumber1Controller.text;
+    final phoneType1 = _phoneType1Controller.text;
+    final phoneNumber2 = _phoneNumber2Controller.text;
+    final phoneType2 = _phoneType2Controller.text;
+    final phoneNumber3 = _phoneNumber3Controller.text;
+    final phoneType3 = _phoneType3Controller.text;
+    final emailAddress1 = _emailAddress1Controller.text;
+    final emailType1 = _emailType1Controller.text;
+    final emailAddress2 = _emailAddress2Controller.text;
+    final emailType2 = _emailType2Controller.text;
+    final emailAddress3 = _emailAddress3Controller.text;
+    final emailType3 = _emailType3Controller.text;
     final organization = _organizationController.text;
     final jobTitle = _jobTitleController.text;
     final dateOfBirth = _dateOfBirthController.text;
@@ -291,10 +395,18 @@ class _AddContactState extends State<AddContact> {
       'city': city,
       'state': state,
       'pin_code': pinCode,
-      'phone_number': phoneNumber,
-      'phone_type': phoneType,
-      'email_address': emailAddress,
-      'email_type': emailType,
+      'phone_number1': phoneNumber1,
+      'phone_type1': phoneType1,
+      'phone_number2': phoneNumber2,
+      'phone_type2': phoneType2,
+      'phone_number3': phoneNumber3,
+      'phone_type3': phoneType3,
+      'email_address1': emailAddress1,
+      'email_type1': emailType1,
+      'email_address2': emailAddress2,
+      'email_type2': emailType2,
+      'email_address3': emailAddress3,
+      'email_type3': emailType3,
       'organization': organization,
       'job_title': jobTitle,
       'date_of_birth': dateOfBirth,
@@ -332,10 +444,18 @@ class _AddContactState extends State<AddContact> {
     final city = _cityController.text;
     final state = _stateController.text;
     final pinCode = _pinCodeController.text;
-    final phoneNumber = _phoneNumberController.text;
-    final phoneType = _phoneTypeController.text;
-    final emailAddress = _emailAddressController.text;
-    final emailType = _emailTypeController.text;
+    final phoneNumber1 = _phoneNumber1Controller.text;
+    final phoneType1 = _phoneType1Controller.text;
+    final phoneNumber2 = _phoneNumber2Controller.text;
+    final phoneType2 = _phoneType2Controller.text;
+    final phoneNumber3 = _phoneNumber3Controller.text;
+    final phoneType3 = _phoneType3Controller.text;
+    final emailAddress1 = _emailAddress1Controller.text;
+    final emailType1 = _emailType1Controller.text;
+    final emailAddress2 = _emailAddress2Controller.text;
+    final emailType2 = _emailType2Controller.text;
+    final emailAddress3 = _emailAddress3Controller.text;
+    final emailType3 = _emailType3Controller.text;
     final organization = _organizationController.text;
     final jobTitle = _jobTitleController.text;
     final dateOfBirth = _dateOfBirthController.text;
@@ -351,10 +471,18 @@ class _AddContactState extends State<AddContact> {
       'city': city,
       'state': state,
       'pin_code': pinCode,
-      'phone_number': phoneNumber,
-      'phone_type': phoneType,
-      'email_address': emailAddress,
-      'email_type': emailType,
+      'phone_number1': phoneNumber1,
+      'phone_type1': phoneType1,
+      'phone_number2': phoneNumber2,
+      'phone_type2': phoneType2,
+      'phone_number3': phoneNumber3,
+      'phone_type3': phoneType3,
+      'email_address1': emailAddress1,
+      'email_type1': emailType1,
+      'email_address2': emailAddress2,
+      'email_type2': emailType2,
+      'email_address3': emailAddress3,
+      'email_type3': emailType3,
       'organization': organization,
       'job_title': jobTitle,
       'date_of_birth': dateOfBirth,
