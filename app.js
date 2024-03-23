@@ -61,11 +61,11 @@ const createPhoneNumbersTable = () => {
         phone_number_id INT AUTO_INCREMENT PRIMARY KEY,
         phone_contact_id INT,
         phone_number1 VARCHAR(15)  ,
-        type1 VARCHAR(50),
+        phone_type1 VARCHAR(50),
         phone_number2 VARCHAR(15)  ,
-        type2 VARCHAR(50),
+        phone_type2 VARCHAR(50),
         phone_number3 VARCHAR(15)  ,
-        type3 VARCHAR(50),
+        phone_type3 VARCHAR(50),
         FOREIGN KEY (phone_contact_id) REFERENCES contacts(contact_id)
     )`, (error, results, fields) => {
         if (error) {
@@ -82,11 +82,11 @@ const createEmailsTable = () => {
         email_id INT AUTO_INCREMENT PRIMARY KEY,
         email_contact_id INT,
         email_address1 VARCHAR(100)  ,
-        type1 VARCHAR(50),
+        email_type1 VARCHAR(50),
         email_address2 VARCHAR(100)  ,
-        type2 VARCHAR(50),
+        email_type2 VARCHAR(50),
         email_address3 VARCHAR(100)  ,
-        type3 VARCHAR(50),
+        email_type3 VARCHAR(50),
         FOREIGN KEY (email_contact_id) REFERENCES contacts(contact_id)
     )`, (error, results, fields) => {
         if (error) {
@@ -165,14 +165,14 @@ app.post('/contacts', (req, res) => {
             }
 
             // Insert phone number
-            pool.query('INSERT INTO phone_numbers (phone_contact_id, phone_number1, type1, phone_number2, type2, phone_number3, type3) VALUES (?, ?, ?, ?, ?, ?, ?)', [contactResult.insertId,phone_number1, phone_type1,phone_number2, phone_type2,phone_number3, phone_type3], (error, phoneResult) => {
+            pool.query('INSERT INTO phone_numbers (phone_contact_id, phone_number1, phone_type1, phone_number2, phone_type2, phone_number3, phone_type3) VALUES (?, ?, ?, ?, ?, ?, ?)', [contactResult.insertId,phone_number1, phone_type1,phone_number2, phone_type2,phone_number3, phone_type3], (error, phoneResult) => {
                 if (error) {
                     console.error('Error inserting phone number:', error);
                     return res.status(500).json({ error: 'Error creating contact.' });
                 }
 
                 // Insert email
-                pool.query('INSERT INTO emails (email_contact_id, email_address1, type1, email_address2, type2, email_address3, type3) VALUES (?, ?, ?, ?, ?, ?, ?)', [contactResult.insertId,email_address1, email_type1,email_address2, email_type2,email_address3, email_type3], (error, emailResult) => {
+                pool.query('INSERT INTO emails (email_contact_id, email_address1, email_type1, email_address2, email_type2, email_address3, email_type3) VALUES (?, ?, ?, ?, ?, ?, ?)', [contactResult.insertId,email_address1, email_type1,email_address2, email_type2,email_address3, email_type3], (error, emailResult) => {
                     if (error) {
                         console.error('Error inserting email:', error);
                         return res.status(500).json({ error: 'Error creating contact.' });
@@ -240,14 +240,14 @@ app.put('/contacts/:contactId', (req, res) => {
             }
 
             // Update phone number
-            pool.query('UPDATE phone_numbers SET phone_number1=?, type1=?,phone_number2=?, type2=?,phone_number3=?, type3=? WHERE phone_contact_id=?', [phone_number1, phone_type1,phone_number2, phone_type2,phone_number3, phone_type3, contactId], (error, phoneResult) => {
+            pool.query('UPDATE phone_numbers SET phone_number1=?, phone_type1=?,phone_number2=?, phone_type2=?,phone_number3=?, phone_type3=? WHERE phone_contact_id=?', [phone_number1, phone_type1,phone_number2, phone_type2,phone_number3, phone_type3, contactId], (error, phoneResult) => {
                 if (error) {
                     console.error('Error updating phone number:', error);
                     return res.status(500).json({ error: 'Error updating phone number.' });
                 }
 
                 // Update email
-                pool.query('UPDATE emails SET email_address1=?, type1=?,email_address2=?, type2=?,email_address3=?, type3=? WHERE email_contact_id=?', [email_address1, email_type1,email_address2, email_type2,email_address3, email_type3, contactId], (error, emailResult) => {
+                pool.query('UPDATE emails SET email_address1=?, email_type1=?,email_address2=?, email_type2=?,email_address3=?, email_type3=? WHERE email_contact_id=?', [email_address1, email_type1,email_address2, email_type2,email_address3, email_type3, contactId], (error, emailResult) => {
                     if (error) {
                         console.error('Error updating email:', error);
                         return res.status(500).json({ error: 'Error updating email.' });

@@ -165,7 +165,7 @@ const seedDatabase = () => {
                         }
 
                         // Insert phone number
-                        pool.query('INSERT INTO phone_numbers (phone_contact_id,phone_number1, type1) VALUES (?,?, ?)', [contactResult.insertId,phone_number1, phone_type1],
+                        pool.query('INSERT INTO phone_numbers (phone_contact_id,phone_number1, phone_type1) VALUES (?,?, ?)', [contactResult.insertId,phone_number1, phone_type1],
                             (error, phoneResult) => {
                                 if (error) {
                                     console.error('Error inserting phone number:', error);
@@ -173,7 +173,7 @@ const seedDatabase = () => {
                                 }
 
                                 // Insert email
-                                pool.query('INSERT INTO emails (email_contact_id,email_address1, type1) VALUES (?,?, ?)', [contactResult.insertId,email_address1, email_type1],
+                                pool.query('INSERT INTO emails (email_contact_id,email_address1, email_type1) VALUES (?,?, ?)', [contactResult.insertId,email_address1, email_type1],
                                     (error, emailResult) => {
                                         if (error) {
                                             console.error('Error inserting email:', error);
