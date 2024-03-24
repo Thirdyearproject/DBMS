@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 class UpdateContact extends StatefulWidget {
   final int contactId;
 
-  const UpdateContact({super.key, required this.contactId});
+  const UpdateContact({Key? key, required this.contactId}) : super(key: key);
 
   @override
   State<UpdateContact> createState() => _UpdateContactPageState();
@@ -70,7 +70,6 @@ class _UpdateContactPageState extends State<UpdateContact> {
     _relationshipTypeController = TextEditingController();
     _tagsController = TextEditingController();
     _notesController = TextEditingController();
-
   }
 
   Future<void> _fetchInitialContactDetails() async {
@@ -87,10 +86,10 @@ class _UpdateContactPageState extends State<UpdateContact> {
         _pinCodeController.text = data['pin_code'] ?? '';
         _phoneNumber1Controller.text = data['type1'] ?? '';
         _phoneType1Controller.text = data['phone_number1'] ?? '';
-        _phoneNumber2Controller.text = data['phone_type2'] ?? '';
-        _phoneType2Controller.text = data['phone_number2'] ?? '';
-        _phoneNumber3Controller.text = data['phone_type3'] ?? '';
-        _phoneType3Controller.text = data['phone_number3'] ?? '';
+        _phoneNumber2Controller.text = data['phone_number2'] ?? '';
+        _phoneType2Controller.text = data['phone_type2'] ?? '';
+        _phoneNumber3Controller.text = data['phone_number3'] ?? '';
+        _phoneType3Controller.text = data['phone_type3'] ?? '';
         _emailAddress1Controller.text = data['email_address1'] ?? '';
         _emailType1Controller.text = data['email_type1'] ?? '';
         _emailAddress2Controller.text = data['email_address2'] ?? '';
@@ -101,53 +100,29 @@ class _UpdateContactPageState extends State<UpdateContact> {
         _jobTitleController.text = data['job_title'] ?? '';
         _dateOfBirthController.text = data['date_of_birth'] ?? '';
         _websiteUrlController.text = data['website_url'] ?? '';
-        _relationshipTypeController.text = data['relationship_type'] ?? ''; // Corrected key name
+        _relationshipTypeController.text =
+            data['relationship_type'] ?? ''; // Corrected key name
         _tagsController.text = data['tags'] ?? '';
         _notesController.text = data['notes'] ?? '';
       } else {
-          // Handle error (e.g., display error message to user)
-          print('Error fetching contact details: ${response.statusCode}');
+        // Handle error (e.g., display error message to user)
+        print('Error fetching contact details: ${response.statusCode}');
       }
-
-        } catch (error) {
-          // Handle network or other errors
-          print('Error fetching contact details2: $error');
-        }
-      }
+    } catch (error) {
+      // Handle network or other errors
+      print('Error fetching contact details2: $error');
+    }
+  }
 
   Future<void> _updateContact() async {
     setState(() => isLoading = true);
     try {
       // Replace with your actual REST API endpoint for updating contact
-      final String url =
-          'http://localhost:3000/contacts/${widget.contactId}';
+      final String url = 'http://localhost:3000/contacts/${widget.contactId}';
       final response = await http.put(
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'name': _nameController.text,'locality':_localityController.text
-        // ,'city':_cityController.text ,
-        // 'state'=_stateController.text ,
-        // 'pin_code'=_pinCodeController.text,
-        // 'type1'=_phoneNumber1Controller.text,
-        // 'phone_number1'=_phoneType1Controller.text,
-        // 'type2'=_phoneNumber2Controller.text,
-        // 'phone_number2'=_phoneType2Controller.text,
-        // 'type3'=_phoneNumber3Controller.text,
-        // 'phone_number3'=_phoneType3Controller.text,
-        // 'email_address1'=_emailAddress1Controller.text,
-        // 'type1'=_emailType1Controller.text,
-        // 'email_address2'=_emailAddress2Controller.text,
-        // 'type2'=_emailType2Controller.text,
-        // 'email_address3'=_emailAddress3Controller.text,
-        // 'type3'_emailType3Controller.text,
-        // 'organization'=_organizationController.text,
-        // 'job_title'=_jobTitleController.text,
-        // 'date_of_birth'=_dateOfBirthController.text,
-        // 'website_url'=_websiteUrlController.text,
-        // 'locality'=_relationshipTypeController.text,
-        // 'tags'=_tagsController.text,
-        // 'notes'=_notesController.text
-        }),
+        body: jsonEncode({'name': _nameController.text}),
       );
       if (response.statusCode == 200) {
         // Success! Navigate back, potentially with a success message
@@ -170,25 +145,26 @@ class _UpdateContactPageState extends State<UpdateContact> {
       appBar: AppBar(
         title: const Text('Update Contact'),
       ),
-      body: Form(
-        key: _formKey,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Contact Name',
+      body: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                TextFormField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Contact Name',
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a name';
+                    }
+                    return null;
+                  },
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a name';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(
@@ -447,16 +423,17 @@ class _UpdateContactPageState extends State<UpdateContact> {
                     labelText: 'Notes',
                   ),
                 ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: isLoading ? null : _updateContact,
-                child: isLoading
-                    ? const CircularProgressIndicator(
-                        color: Colors.white,
-                      )
-                    : const Text('Update Contact'),
-              ),
-            ],
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: isLoading ? null : _updateContact,
+                  child: isLoading
+                      ? const CircularProgressIndicator(
+                          color: Colors.white,
+                        )
+                      : const Text('Update Contact'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
