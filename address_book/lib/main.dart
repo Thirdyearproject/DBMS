@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 
 import 'add_contact.dart';
 import 'update_contact.dart';
+import 'about_contact.dart';
 
 void main() async {
   runApp(const MyApp());
@@ -134,51 +135,65 @@ class _MyHomePageState extends State<MyHomePage> {
                               if (contact.name
                                   .toLowerCase()
                                   .contains(searchQuery.toLowerCase())) {
-                                return MouseRegion(
-                                  onHover: (event) =>
-                                      setState(() => contact.isHovered = true),
-                                  onExit: (event) =>
-                                      setState(() => contact.isHovered = false),
-                                  child: Card(
-                                    child: ListTile(
-                                      leading: const CircleAvatar(
-                                        child: Icon(Icons.person),
+                                return GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => AboutContact(
+                                          contactId: contact.id,
+                                        ),
                                       ),
-                                      title: Text(
-                                        contact.name,
-                                        textAlign: contact.isHovered
-                                            ? TextAlign.left
-                                            : TextAlign.center,
+                                    );
+                                  },
+                                  child: MouseRegion(
+                                    onHover: (event) => setState(
+                                        () => contact.isHovered = true),
+                                    onExit: (event) => setState(
+                                        () => contact.isHovered = false),
+                                    child: Card(
+                                      child: ListTile(
+                                        leading: const CircleAvatar(
+                                          child: Icon(Icons.person),
+                                        ),
+                                        title: Text(
+                                          contact.name,
+                                          textAlign: contact.isHovered
+                                              ? TextAlign.left
+                                              : TextAlign.center,
+                                        ),
+                                        trailing: contact.isHovered
+                                            ? Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  IconButton(
+                                                    onPressed: () async {
+                                                      await Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              UpdateContact(
+                                                                  contactId:
+                                                                      contact
+                                                                          .id),
+                                                        ),
+                                                      );
+                                                      _fetchContacts();
+                                                    },
+                                                    icon:
+                                                        const Icon(Icons.edit),
+                                                  ),
+                                                  IconButton(
+                                                    onPressed: () =>
+                                                        _deleteContact(
+                                                            contact.id),
+                                                    icon: const Icon(
+                                                        Icons.delete),
+                                                  ),
+                                                ],
+                                              )
+                                            : null,
                                       ),
-                                      trailing: contact.isHovered
-                                          ? Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                IconButton(
-                                                  onPressed: () async {
-                                                    await Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            UpdateContact(
-                                                                contactId:
-                                                                    contact.id),
-                                                      ),
-                                                    );
-                                                    _fetchContacts(); // Refresh contacts list after updating
-                                                  },
-                                                  icon: const Icon(Icons.edit),
-                                                ),
-                                                IconButton(
-                                                  onPressed: () =>
-                                                      _deleteContact(
-                                                          contact.id),
-                                                  icon:
-                                                      const Icon(Icons.delete),
-                                                ),
-                                              ],
-                                            )
-                                          : null,
                                     ),
                                   ),
                                 );
@@ -194,7 +209,7 @@ class _MyHomePageState extends State<MyHomePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           await Navigator.pushNamed(context, '/add-contact');
-          _fetchContacts(); // Refresh contacts list after adding
+          _fetchContacts();
         },
         child: const Icon(Icons.add),
       ),
