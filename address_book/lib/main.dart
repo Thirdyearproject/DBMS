@@ -42,9 +42,12 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   List<Contact> contacts = [];
   String searchQuery = '';
-  String selectedFilterOption =
-      'Filter Option 1'; // Initially selected filter option
+  String selectedFilterOption = 'City'; // Initially selected filter option
   bool isLoading = false;
+  String cityFilter = '';
+  String organizationFilter = '';
+  String jobFilter = '';
+  String relationFilter = '';
 
   @override
   void initState() {
@@ -268,20 +271,21 @@ class _MyHomePageState extends State<MyHomePage> {
                 selectedFilterOption = newValue!;
               });
               // Apply filter logic here based on selectedFilterOption
-              // For example:
-              // if (selectedFilterOption == 'Filter Option 1') {
-              //   // Apply filter logic for option 1
-              // } else if (selectedFilterOption == 'Filter Option 2') {
-              //   // Apply filter logic for option 2
-              // } else if (selectedFilterOption == 'Filter Option 3') {
-              //   // Apply filter logic for option 3
-              // }
+              if (selectedFilterOption == 'City' ||
+                  selectedFilterOption == 'Organization' ||
+                  selectedFilterOption == 'Job' ||
+                  selectedFilterOption == 'Relation') {
+                showTextFilterDialog(
+                    context, 'Enter ${selectedFilterOption}', applyFilter);
+              }
               Navigator.of(context).pop();
             },
             items: <String>[
-              'Filter Option 1',
-              'Filter Option 2',
-              'Filter Option 3'
+              'City',
+              'Date of Birth Range',
+              'Organization',
+              'Job',
+              'Relation'
             ].map<DropdownMenuItem<String>>((String value) {
               return DropdownMenuItem<String>(
                 value: value,
@@ -292,6 +296,97 @@ class _MyHomePageState extends State<MyHomePage> {
         );
       },
     );
+  }
+
+  void showTextFilterDialog(
+      BuildContext context, String hintText, Function(String) applyFilter) {
+    String filterValue = '';
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Enter $hintText'),
+          content: TextField(
+            onChanged: (value) {
+              filterValue = value;
+            },
+            decoration: InputDecoration(
+              hintText: 'Enter $hintText',
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                applyFilter(filterValue);
+                Navigator.of(context).pop();
+              },
+              child: Text('Apply'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void applyFilter(String filterValue) {
+    // Update the filter value based on the selected filter option
+    if (selectedFilterOption == 'City') {
+      cityFilter = filterValue;
+    } else if (selectedFilterOption == 'Organization') {
+      organizationFilter = filterValue;
+    } else if (selectedFilterOption == 'Job') {
+      jobFilter = filterValue;
+    } else if (selectedFilterOption == 'Relation') {
+      relationFilter = filterValue;
+    }
+
+    // Construct the query string
+    String queryString = '?';
+    if (cityFilter.isNotEmpty) {
+      queryString += 'city=$cityFilter&';
+    }
+    if (organizationFilter.isNotEmpty) {
+      queryString += 'organization=$organizationFilter&';
+    }
+    if (jobFilter.isNotEmpty) {
+      queryString += 'job=$jobFilter&';
+    }
+    if (relationFilter.isNotEmpty) {
+      queryString += 'relation=$relationFilter&';
+    }
+
+    // Remove the trailing '&' character
+    queryString = queryString.substring(0, queryString.length - 1);
+
+    // Make the API call with the constructed query string
+    _fetchContactsWithFilters(queryString);
+  }
+
+  Future<void> _fetchContactsWithFilters(String queryString) async {
+    setState(() {
+      isLoading = true;
+    });
+
+    final response =
+        await http.get(Uri.parse('http://localhost:3000/contacts$queryString'));
+    if (response.statusCode == 200) {
+      Iterable l = json.decode(response.body);
+      contacts = List<Contact>.from(
+          l.map((model) => Contact.fromJson(model)).toList());
+    } else {
+      throw Exception('Failed to load contacts');
+    }
+
+    setState(() {
+      isLoading = false;
+    });
   }
 }
 
