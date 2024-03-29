@@ -92,9 +92,90 @@ function createTriggers() {
         }
     });
   };
+   
+  const createUpdatePhoneNumberLengthTrigger = () => {
+    const dropTriggerQuery = `DROP TRIGGER IF EXISTS update_phone_numbers`;
+
+    // Execute query to drop the trigger if it exists
+    pool.query(dropTriggerQuery, (error, results, fields) => {
+        if (error) {
+            console.error("Error dropping update_phone_numbers trigger:", error);
+            return;
+        }
+
+        // Now create the trigger
+        const createTriggerQuery = `
+            CREATE TRIGGER update_phone_numbers
+            BEFORE UPDATE ON phone_numbers
+            FOR EACH ROW
+            BEGIN
+                IF LENGTH(NEW.phone_number1) != 10 THEN
+                    SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Phone number must be 10 digits long';
+                END IF;
+                IF NEW.phone_number2 IS NOT NULL AND LENGTH(NEW.phone_number2) != 10 THEN
+                    SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Phone number must be 10 digits long';
+                END IF;
+                IF NEW.phone_number3 IS NOT NULL AND LENGTH(NEW.phone_number3) != 10 THEN
+                    SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Phone number must be 10 digits long';
+                END IF;
+            END`;
+
+        // Execute query to create the trigger
+        pool.query(createTriggerQuery, (error, results, fields) => {
+            if (error) {
+                console.error("Error creating update_phone_numbers trigger:", error);
+            } else {
+                console.log("update_phone_numbers trigger created successfully");
+            }
+        });
+    });
+};
+ 
+// Function to create the trigger for updating phone number 1 uniqueness
+const createUniquePhoneNumberUpdateTrigger = () => {
+    const dropTriggerQuery = `DROP TRIGGER IF EXISTS unique_phone_number1_update`;
+
+    // Execute query to drop the trigger if it exists
+    pool.query(dropTriggerQuery, (error, results, fields) => {
+        if (error) {
+            console.error("Error dropping unique_phone_number1_update trigger:", error);
+            return;
+        }
+
+        // Now create the trigger
+        const createTriggerQuery = `
+            CREATE TRIGGER unique_phone_number1_update
+            BEFORE UPDATE ON phone_numbers
+            FOR EACH ROW
+            BEGIN
+                DECLARE existing_count INT;
+                SELECT COUNT(*) INTO existing_count FROM phone_numbers WHERE phone_number1 = NEW.phone_number1 AND NOT (OLD.phone_number1 <=> NEW.phone_number1);
+                IF existing_count > 0 THEN
+                    SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Phone number1 must be unique for each contact';
+                END IF;
+            END`;
+
+        // Execute query to create the trigger
+        pool.query(createTriggerQuery, (error, results, fields) => {
+            if (error) {
+                console.error("Error creating unique_phone_number1_update trigger:", error);
+            } else {
+                console.log("unique_phone_number1_update trigger created successfully");
+            }
+        });
+    });
+};
+
+
   const initializeTriggers = () => {
     createPhoneNumberLengthTrigger();
     createUniquePhoneNumberTrigger();
+    createUpdatePhoneNumberLengthTrigger();
+    createUniquePhoneNumberUpdateTrigger();
   };
   initializeTriggers();
 }
