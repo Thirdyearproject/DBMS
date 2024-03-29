@@ -80,6 +80,7 @@ const createPhoneNumbersTable = () => {
         console.error("Error creating phone_numbers table:", error);
       } else {
         console.log("Phone Numbers table created or already exists");
+        createPhoneNumberLengthTrigger();
       }
     }
   );
@@ -135,9 +136,151 @@ const initializeTables = () => {
   createAddressesTable();
   createPhoneNumbersTable();
   createEmailsTable();
+  
+  //triggers
+  createUniquePhoneNumberTrigger();
+
 };
 
+// Function to create the unique phone number trigger
+const createUniquePhoneNumberTrigger = () => {
+  const checkTriggerQuery = `
+      SELECT * FROM information_schema.triggers 
+      WHERE trigger_name = 'unique_phone_number1' 
+      AND trigger_schema = DATABASE()`;
+
+  // Execute query to check if the trigger already exists
+  pool.query(checkTriggerQuery, (error, results, fields) => {
+      if (error) {
+          console.error("Error checking unique_phone_number1 trigger:", error);
+          return;
+      }
+      
+      if (results.length === 0) {
+          const createTriggerQuery = `
+              CREATE TRIGGER unique_phone_number1
+              BEFORE INSERT ON phone_numbers
+              FOR EACH ROW
+              BEGIN
+                  DECLARE existing_count INT;
+                  SELECT COUNT(*) INTO existing_count FROM phone_numbers WHERE phone_number1 = NEW.phone_number1;
+                  IF existing_count > 0 THEN
+                      SIGNAL SQLSTATE '45000'
+                      SET MESSAGE_TEXT = 'Phone number1 must be unique for each contact';
+                  END IF;
+              END`;
+      
+          // Execute query to create the trigger
+          pool.query(createTriggerQuery, (error, results, fields) => {
+              if (error) {
+                  console.error("Error creating unique_phone_number1 trigger:", error);
+              } else {
+                  console.log("unique_phone_number1 trigger created successfully");
+              }
+          });
+      } else {
+          console.log("unique_phone_number1 trigger already exists");
+      }
+  });
+};
+
+// Function to create the trigger for phone number length check
+const createPhoneNumberLengthTrigger = () => {
+  const checkTriggerQuery = `
+      SELECT * FROM information_schema.triggers 
+      WHERE trigger_name = 'check_phone_number_length' 
+      AND trigger_schema = DATABASE()`;
+
+  // Execute query to check if the trigger already exists
+  pool.query(checkTriggerQuery, (error, results, fields) => {
+      if (error) {
+          console.error("Error checking check_phone_number_length trigger:", error);
+          return;
+      }
+      
+      if (results.length === 0) {
+          const createTriggerQuery = `
+              CREATE TRIGGER check_phone_number_length
+              BEFORE INSERT ON phone_numbers
+              FOR EACH ROW
+              BEGIN
+                  IF LENGTH(NEW.phone_number1) != 10 THEN
+                      SIGNAL SQLSTATE '45000'
+                      SET MESSAGE_TEXT = 'Phone number must be 10 digits long';
+                  END IF;
+                  IF NEW.phone_number2 IS NOT NULL AND LENGTH(NEW.phone_number2) != 10 THEN
+                      SIGNAL SQLSTATE '45000'
+                      SET MESSAGE_TEXT = 'Phone number must be 10 digits long';
+                  END IF;
+                  IF NEW.phone_number3 IS NOT NULL AND LENGTH(NEW.phone_number3) != 10 THEN
+                      SIGNAL SQLSTATE '45000'
+                      SET MESSAGE_TEXT = 'Phone number must be 10 digits long';
+                  END IF;
+              END`;
+      
+          // Execute query to create the trigger
+          pool.query(createTriggerQuery, (error, results, fields) => {
+              if (error) {
+                  console.error("Error creating check_phone_number_length trigger:", error);
+              } else {
+                  console.log("check_phone_number_length trigger created successfully");
+              }
+          });
+      } else {
+          console.log("check_phone_number_length trigger already exists");
+      }
+  });
+};
+
+
 initializeTables();
+
+
+// Function to handle contact insertion with transaction
+const insertContactWithTransaction = (contactData) => {
+  return new Promise((resolve, reject) => {
+    pool.getConnection((err, connection) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      // Begin transaction
+      connection.beginTransaction((err) => {
+        if (err) {
+          connection.release();
+          reject(err);
+          return;
+        }
+
+        // Insert contact
+        connection.query("INSERT INTO contacts SET ?", contactData, (err, contactResult) => {
+          if (err) {
+            return connection.rollback(() => {
+              connection.release();
+              reject(err);
+            });
+          }
+
+          // Insert address, phone numbers, emails, relationships here
+
+          // Commit transaction
+          connection.commit((err) => {
+            if (err) {
+              return connection.rollback(() => {
+                connection.release();
+                reject(err);
+              });
+            }
+
+            connection.release();
+            resolve(contactResult.insertId); // Resolve with inserted contact ID
+          });
+        });
+      });
+    });
+  });
+};
 
 app.post("/contacts", (req, res) => {
   const {
@@ -167,95 +310,145 @@ app.post("/contacts", (req, res) => {
     relationship_type,
   } = req.body;
 
-  // Insert contact
-  pool.query(
-    "INSERT INTO contacts (name, organization, job_title, date_of_birth, website_url, notes, tags) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    [name, organization, job_title, date_of_birth, website_url, notes, tags],
-    (error, contactResult) => {
-      if (error) {
-        console.error("Error inserting contact:", error);
+  pool.getConnection((err, connection) => {
+    if (err) {
+      console.error("Error getting connection:", err);
+      return res.status(500).json({ error: "Error creating contact." });
+    }
+
+    // Begin transaction
+    connection.beginTransaction((err) => {
+      if (err) {
+        console.error("Error beginning transaction:", err);
+        connection.release();
         return res.status(500).json({ error: "Error creating contact." });
       }
-      pool.query(
-        "INSERT INTO addresses (Address_contact_id,locality, city, state, pin_code) VALUES (?,?, ?, ?, ?)",
-        [contactResult.insertId, locality, city, state, pin_code],
-        (error, addressResult) => {
+
+      // Insert contact
+      connection.query(
+        "INSERT INTO contacts (name, organization, job_title, date_of_birth, website_url, notes, tags) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [name, organization, job_title, date_of_birth, website_url, notes, tags],
+        (error, contactResult) => {
           if (error) {
-            console.error("Error inserting address:", error);
-            return res.status(500).json({ error: "Error creating contact." });
+            console.error("Error inserting contact:", error);
+            return connection.rollback(() => {
+              connection.release();
+              res.status(500).json({ error: "Error creating contact." });
+            });
           }
 
-          // Insert phone number
-          pool.query(
-            "INSERT INTO phone_numbers (phone_contact_id, phone_number1, phone_type1, phone_number2, phone_type2, phone_number3, phone_type3) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            [
-              contactResult.insertId,
-              phone_number1,
-              phone_type1,
-              phone_number2,
-              phone_type2,
-              phone_number3,
-              phone_type3,
-            ],
-            (error, phoneResult) => {
+          // Insert address
+          connection.query(
+            "INSERT INTO addresses (Address_contact_id,locality, city, state, pin_code) VALUES (?,?, ?, ?, ?)",
+            [contactResult.insertId, locality, city, state, pin_code],
+            (error, addressResult) => {
               if (error) {
-                console.error("Error inserting phone number:", error);
-                return res
-                  .status(500)
-                  .json({ error: "Error creating contact." });
+                console.error("Error inserting address:", error);
+                return connection.rollback(() => {
+                  connection.release();
+                  res.status(500).json({ error: "Error creating contact." });
+                });
               }
 
-              // Insert email
-              pool.query(
-                "INSERT INTO emails (email_contact_id, email_address1, email_type1, email_address2, email_type2, email_address3, email_type3) VALUES (?, ?, ?, ?, ?, ?, ?)",
+              // Insert phone number
+              connection.query(
+                "INSERT INTO phone_numbers (phone_contact_id, phone_number1, phone_type1, phone_number2, phone_type2, phone_number3, phone_type3) VALUES (?, ?, ?, ?, ?, ?, ?)",
                 [
                   contactResult.insertId,
-                  email_address1,
-                  email_type1,
-                  email_address2,
-                  email_type2,
-                  email_address3,
-                  email_type3,
+                  phone_number1,
+                  phone_type1,
+                  phone_number2,
+                  phone_type2,
+                  phone_number3,
+                  phone_type3,
                 ],
-                (error, emailResult) => {
+                (error, phoneResult) => {
                   if (error) {
-                    console.error("Error inserting email:", error);
-                    return res
-                      .status(500)
-                      .json({ error: "Error creating contact." });
-                  }
-
-                  // Insert relationship
-                  if (relationship_type) {
-                    pool.query(
-                      "INSERT INTO relationships (person_id, relationship_type) VALUES (?, ?)",
-                      [contactResult.insertId, relationship_type],
-                      (error, relationshipResult) => {
-                        if (error) {
-                          console.error("Error inserting relationship:", error);
-                          return res
-                            .status(500)
-                            .json({ error: "Error creating relationship." });
-                        }
-                        res.status(201).json({
-                          message: `Contact added with ID: ${contactResult.insertId}`,
-                        });
-                      }
-                    );
-                  } else {
-                    res.status(201).json({
-                      message: `Contact added with ID: ${contactResult.insertId}`,
+                    console.error("Error inserting phone number:", error);
+                    return connection.rollback(() => {
+                      connection.release();
+                      res.status(500).json({ error: "Error creating contact." });
                     });
                   }
+
+                  // Insert email
+                  connection.query(
+                    "INSERT INTO emails (email_contact_id, email_address1, email_type1, email_address2, email_type2, email_address3, email_type3) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    [
+                      contactResult.insertId,
+                      email_address1,
+                      email_type1,
+                      email_address2,
+                      email_type2,
+                      email_address3,
+                      email_type3,
+                    ],
+                    (error, emailResult) => {
+                      if (error) {
+                        console.error("Error inserting email:", error);
+                        return connection.rollback(() => {
+                          connection.release();
+                          res.status(500).json({ error: "Error creating contact." });
+                        });
+                      }
+
+                      // Insert relationship
+                      if (relationship_type) {
+                        connection.query(
+                          "INSERT INTO relationships (person_id, relationship_type) VALUES (?, ?)",
+                          [contactResult.insertId, relationship_type],
+                          (error, relationshipResult) => {
+                            if (error) {
+                              console.error("Error inserting relationship:", error);
+                              return connection.rollback(() => {
+                                connection.release();
+                                res.status(500).json({ error: "Error creating relationship." });
+                              });
+                            }
+                            // Commit transaction if everything is successful
+                            connection.commit((err) => {
+                              if (err) {
+                                console.error("Error committing transaction:", err);
+                                return connection.rollback(() => {
+                                  connection.release();
+                                  res.status(500).json({ error: "Error creating contact." });
+                                });
+                              }
+                              connection.release();
+                              res.status(201).json({
+                                message: `Contact added with ID: ${contactResult.insertId}`,
+                              });
+                            });
+                          }
+                        );
+                      } else {
+                        // Commit transaction if everything is successful
+                        connection.commit((err) => {
+                          if (err) {
+                            console.error("Error committing transaction:", err);
+                            return connection.rollback(() => {
+                              connection.release();
+                              res.status(500).json({ error: "Error creating contact." });
+                            });
+                          }
+                          connection.release();
+                          res.status(201).json({
+                            message: `Contact added with ID: ${contactResult.insertId}`,
+                          });
+                        });
+                      }
+                    }
+                  );
                 }
               );
             }
           );
         }
       );
-    }
-  );
+    });
+  });
 });
+
 
 app.put("/contacts/:contactId", (req, res) => {
   const contactId = req.params.contactId;
