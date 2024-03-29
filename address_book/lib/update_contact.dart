@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 class UpdateContact extends StatefulWidget {
   final int contactId;
 
-  const UpdateContact({Key? key, required this.contactId}) : super(key: key);
+  const UpdateContact({super.key, required this.contactId});
 
   @override
   State<UpdateContact> createState() => _UpdateContactPageState();

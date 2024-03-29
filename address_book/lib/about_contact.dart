@@ -57,111 +57,113 @@ class _AboutContactState extends State<AboutContact> {
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : contactData != null
-              ? Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Name: ${contactData?['name'] ?? 'N/A'}',
-                        style: TextStyle(fontSize: 18.0),
-                      ),
-                      SizedBox(height: 10.0),
-                      if (contactData?['phone_number1'] != null)
-                        Text(
-                          'Phone Number 1: ${contactData?['phone_number1'] ?? 'N/A'}',
-                          style: TextStyle(fontSize: 18.0),
-                        ),
-                      if (contactData?['phone_type1'] != null)
-                        Text(
-                          'Phone Type 1: ${contactData?['phone_type1'] ?? 'N/A'}',
-                          style: TextStyle(fontSize: 18.0),
-                        ),
-                      if (contactData?['phone_number2'] != null)
-                        Text(
-                          'Phone Number 2: ${contactData?['phone_number2'] ?? 'N/A'}',
-                          style: TextStyle(fontSize: 18.0),
-                        ),
-                      if (contactData?['phone_type2'] != null)
-                        Text(
-                          'Phone Type 2: ${contactData?['phone_type2'] ?? 'N/A'}',
-                          style: TextStyle(fontSize: 18.0),
-                        ),
-                      if (contactData?['phone_number3'] != null)
-                        Text(
-                          'Phone Number 3: ${contactData?['phone_number3'] ?? 'N/A'}',
-                          style: TextStyle(fontSize: 18.0),
-                        ),
-                      if (contactData?['phone_type3'] != null)
-                        Text(
-                          'Phone Type 3: ${contactData?['phone_type3'] ?? 'N/A'}',
-                          style: TextStyle(fontSize: 18.0),
-                        ),
-                      SizedBox(height: 10.0),
-                      if (contactData?['email_address1'] != null)
-                        Text(
-                          'Email 1: ${contactData?['email_address1'] ?? 'N/A'}',
-                          style: TextStyle(fontSize: 18.0),
-                        ),
-                      if (contactData?['email_type1'] != null)
-                        Text(
-                          'Email Type 1: ${contactData?['email_type1'] ?? 'N/A'}',
-                          style: TextStyle(fontSize: 18.0),
-                        ),
-                      if (contactData?['email_address2'] != null)
-                        Text(
-                          'Email 2: ${contactData?['email_address2'] ?? 'N/A'}',
-                          style: TextStyle(fontSize: 18.0),
-                        ),
-                      if (contactData?['email_type2'] != null)
-                        Text(
-                          'Email Type 2: ${contactData?['email_type2'] ?? 'N/A'}',
-                          style: TextStyle(fontSize: 18.0),
-                        ),
-                      if (contactData?['email_address3'] != null)
-                        Text(
-                          'Email 3: ${contactData?['email_address3'] ?? 'N/A'}',
-                          style: TextStyle(fontSize: 18.0),
-                        ),
-                      if (contactData?['email_type3'] != null)
-                        Text(
-                          'Email Type 3: ${contactData?['email_type3'] ?? 'N/A'}',
-                          style: TextStyle(fontSize: 18.0),
-                        ),
-                      SizedBox(height: 10.0),
-                      Text(
-                        'Organization: ${contactData?['organization'] ?? 'N/A'}',
-                        style: TextStyle(fontSize: 18.0),
-                      ),
-                      SizedBox(height: 10.0),
-                      Text(
-                        'Job Title: ${contactData?['job_title'] ?? 'N/A'}',
-                        style: TextStyle(fontSize: 18.0),
-                      ),
-                      SizedBox(height: 10.0),
-                      Text(
-                        'Date of Birth: ${_formatDate(contactData?['date_of_birth'])}',
-                        style: TextStyle(fontSize: 18.0),
-                      ),
-                      SizedBox(height: 10.0),
-                      Text(
-                        'Website: ${contactData?['website_url'] ?? 'N/A'}',
-                        style: TextStyle(fontSize: 18.0),
-                      ),
-                      SizedBox(height: 10.0),
-                      Text(
-                        'Notes: ${contactData?['notes'] ?? 'N/A'}',
-                        style: TextStyle(fontSize: 18.0),
-                      ),
-                      SizedBox(height: 10.0),
-                      Text(
-                        'Address: ${contactData?['locality'] ?? 'N/A'}, ${contactData?['city'] ?? 'N/A'}, ${contactData?['state'] ?? 'N/A'}, ${contactData?['pin_code'] ?? 'N/A'}',
-                        style: TextStyle(fontSize: 18.0),
-                      ),
-                    ],
+              ? SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildContactDetail(
+                            'Name', contactData?['name'] ?? 'N/A'),
+                        _buildRowWithTwoFields('Phone Numbers', [
+                          contactData?['phone_number1'],
+                          contactData?['phone_number2'],
+                          contactData?['phone_number3']
+                        ], [
+                          contactData?['phone_type1'],
+                          contactData?['phone_type2'],
+                          contactData?['phone_type3']
+                        ]),
+                        _buildRowWithTwoFields('Emails', [
+                          contactData?['email_address1'],
+                          contactData?['email_address2'],
+                          contactData?['email_address3']
+                        ], [
+                          contactData?['email_type1'],
+                          contactData?['email_type2'],
+                          contactData?['email_type3']
+                        ]),
+                        _buildContactDetail('Organization',
+                            contactData?['organization'] ?? 'N/A'),
+                        _buildContactDetail(
+                            'Job Title', contactData?['job_title'] ?? 'N/A'),
+                        _buildContactDetail('Date of Birth',
+                            _formatDate(contactData?['date_of_birth'])),
+                        _buildContactDetail(
+                            'Website', contactData?['website_url'] ?? 'N/A'),
+                        _buildContactDetail(
+                            'Notes', contactData?['notes'] ?? 'N/A'),
+                        _buildContactDetail('Address',
+                            '${contactData?['locality'] ?? 'N/A'}, ${contactData?['city'] ?? 'N/A'}, ${contactData?['state'] ?? 'N/A'}, ${contactData?['pin_code'] ?? 'N/A'}'),
+                      ],
+                    ),
                   ),
                 )
               : Center(child: Text('No contact data available')),
+    );
+  }
+
+  Widget _buildContactDetail(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 18.0,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue, // Adjust color as needed
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 16.0,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRowWithTwoFields(
+      String label, List<String?> values, List<String?> types) {
+    List<Widget> rows = [];
+    for (int i = 0; i < values.length; i++) {
+      if (values[i] != null) {
+        rows.add(
+          Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 18.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Text(
+                  '${values[i]} (${types[i] ?? 'N/A'})',
+                  style: TextStyle(
+                    fontSize: 16.0,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: rows,
     );
   }
 

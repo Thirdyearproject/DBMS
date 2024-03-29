@@ -80,6 +80,8 @@ class _AddContactState extends State<AddContact> {
                   controller: _nameController,
                   decoration: const InputDecoration(
                     labelText: 'Name',
+                    fillColor: Colors.white,
+                    filled: true,
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -96,6 +98,8 @@ class _AddContactState extends State<AddContact> {
                         controller: _localityController,
                         decoration: const InputDecoration(
                           labelText: 'Locality',
+                          fillColor: Colors.white,
+                          filled: true,
                         ),
                       ),
                     ),
@@ -105,6 +109,8 @@ class _AddContactState extends State<AddContact> {
                         controller: _cityController,
                         decoration: const InputDecoration(
                           labelText: 'City',
+                          fillColor: Colors.white,
+                          filled: true,
                         ),
                       ),
                     ),
@@ -118,6 +124,8 @@ class _AddContactState extends State<AddContact> {
                         controller: _stateController,
                         decoration: const InputDecoration(
                           labelText: 'State',
+                          fillColor: Colors.white,
+                          filled: true,
                         ),
                       ),
                     ),
@@ -127,6 +135,8 @@ class _AddContactState extends State<AddContact> {
                         controller: _pinCodeController,
                         decoration: const InputDecoration(
                           labelText: 'Pin Code',
+                          fillColor: Colors.white,
+                          filled: true,
                         ),
                       ),
                     ),
@@ -140,6 +150,8 @@ class _AddContactState extends State<AddContact> {
                         controller: _phoneNumber1Controller,
                         decoration: const InputDecoration(
                           labelText: 'Phone Number 1',
+                          fillColor: Colors.white,
+                          filled: true,
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -155,6 +167,8 @@ class _AddContactState extends State<AddContact> {
                         controller: _phoneType1Controller,
                         decoration: const InputDecoration(
                           labelText: 'Phone1 Type',
+                          fillColor: Colors.white,
+                          filled: true,
                         ),
                       ),
                     ),
@@ -168,6 +182,8 @@ class _AddContactState extends State<AddContact> {
                         controller: _phoneNumber2Controller,
                         decoration: const InputDecoration(
                           labelText: 'Phone Number 2',
+                          fillColor: Colors.white,
+                          filled: true,
                         ),
                       ),
                     ),
@@ -177,6 +193,8 @@ class _AddContactState extends State<AddContact> {
                         controller: _phoneType2Controller,
                         decoration: const InputDecoration(
                           labelText: 'Phone2 Type',
+                          fillColor: Colors.white,
+                          filled: true,
                         ),
                       ),
                     ),
@@ -190,6 +208,8 @@ class _AddContactState extends State<AddContact> {
                         controller: _phoneNumber3Controller,
                         decoration: const InputDecoration(
                           labelText: 'Phone Number 3',
+                          fillColor: Colors.white,
+                          filled: true,
                         ),
                       ),
                     ),
@@ -199,6 +219,8 @@ class _AddContactState extends State<AddContact> {
                         controller: _phoneType3Controller,
                         decoration: const InputDecoration(
                           labelText: 'Phone3 Type',
+                          fillColor: Colors.white,
+                          filled: true,
                         ),
                       ),
                     ),
@@ -212,6 +234,8 @@ class _AddContactState extends State<AddContact> {
                         controller: _emailAddress1Controller,
                         decoration: const InputDecoration(
                           labelText: 'Email Address1',
+                          fillColor: Colors.white,
+                          filled: true,
                         ),
                       ),
                     ),
@@ -221,6 +245,8 @@ class _AddContactState extends State<AddContact> {
                         controller: _emailType1Controller,
                         decoration: const InputDecoration(
                           labelText: 'Email1 Type',
+                          fillColor: Colors.white,
+                          filled: true,
                         ),
                       ),
                     ),
@@ -234,6 +260,8 @@ class _AddContactState extends State<AddContact> {
                         controller: _emailAddress2Controller,
                         decoration: const InputDecoration(
                           labelText: 'Email Address2',
+                          fillColor: Colors.white,
+                          filled: true,
                         ),
                       ),
                     ),
@@ -243,6 +271,8 @@ class _AddContactState extends State<AddContact> {
                         controller: _emailType2Controller,
                         decoration: const InputDecoration(
                           labelText: 'Email2 Type',
+                          fillColor: Colors.white,
+                          filled: true,
                         ),
                       ),
                     ),
@@ -256,6 +286,8 @@ class _AddContactState extends State<AddContact> {
                         controller: _emailAddress3Controller,
                         decoration: const InputDecoration(
                           labelText: 'Email Address3',
+                          fillColor: Colors.white,
+                          filled: true,
                         ),
                       ),
                     ),
@@ -265,6 +297,8 @@ class _AddContactState extends State<AddContact> {
                         controller: _emailType3Controller,
                         decoration: const InputDecoration(
                           labelText: 'Email3 Type',
+                          fillColor: Colors.white,
+                          filled: true,
                         ),
                       ),
                     ),
@@ -278,6 +312,8 @@ class _AddContactState extends State<AddContact> {
                         controller: _organizationController,
                         decoration: const InputDecoration(
                           labelText: 'Organization',
+                          fillColor: Colors.white,
+                          filled: true,
                         ),
                       ),
                     ),
@@ -287,6 +323,8 @@ class _AddContactState extends State<AddContact> {
                         controller: _jobTitleController,
                         decoration: const InputDecoration(
                           labelText: 'Job Title',
+                          fillColor: Colors.white,
+                          filled: true,
                         ),
                       ),
                     ),
@@ -300,6 +338,8 @@ class _AddContactState extends State<AddContact> {
                         controller: _dateOfBirthController,
                         decoration: const InputDecoration(
                           labelText: 'Date of Birth',
+                          fillColor: Colors.white,
+                          filled: true,
                         ),
                         onTap: () {
                           _selectDate(context);
@@ -313,6 +353,8 @@ class _AddContactState extends State<AddContact> {
                         controller: _websiteUrlController,
                         decoration: const InputDecoration(
                           labelText: 'Website URL',
+                          fillColor: Colors.white,
+                          filled: true,
                         ),
                       ),
                     ),
@@ -326,6 +368,8 @@ class _AddContactState extends State<AddContact> {
                         controller: _relationshipTypeController,
                         decoration: const InputDecoration(
                           labelText: 'Relationship Type',
+                          fillColor: Colors.white,
+                          filled: true,
                         ),
                       ),
                     ),
@@ -335,6 +379,8 @@ class _AddContactState extends State<AddContact> {
                         controller: _tagsController,
                         decoration: const InputDecoration(
                           labelText: 'Tags',
+                          fillColor: Colors.white,
+                          filled: true,
                         ),
                       ),
                     ),
@@ -345,6 +391,8 @@ class _AddContactState extends State<AddContact> {
                   controller: _notesController,
                   decoration: const InputDecoration(
                     labelText: 'Notes',
+                    fillColor: Colors.white,
+                    filled: true,
                   ),
                 ),
                 const SizedBox(height: 16),
