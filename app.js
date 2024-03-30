@@ -637,7 +637,11 @@ app.get('/filter', (req, res) => {
       res.status(500).json({ error: 'Internal server error' });
       return;
     }
-    res.json(results);
+    if (results.length === 0) { // Check if no contacts found
+      res.status(404).json({ message: 'No contacts found based on the provided criteria' });
+    } else {
+      res.json(results);
+    }
   });
 });
 
