@@ -590,6 +590,58 @@ app.get("/relationship/:personA/:personC", (req, res) => {
     });
 });
 
+app.get('/filter', (req, res) => {
+  const { searchQuery, city, dateOfBirthStart, dateOfBirthEnd, organization, job, relation } = req.query;
+
+  let query = `
+    SELECT c.*
+    FROM contacts c
+    INNER JOIN addresses a ON c.contact_id = a.Address_contact_id
+    WHERE 1
+  `;
+  let queryParams = [];
+
+  if (searchQuery) {
+    query += ' AND LOWER(c.name) LIKE ?';
+    queryParams.push('%' + searchQuery.toLowerCase() + '%');
+  }
+
+  if (city) {
+    query += ' AND LOWER(a.city) = ?';
+    queryParams.push(city.toLowerCase());
+  }
+
+  if (dateOfBirthStart && dateOfBirthEnd) {
+    query += ' AND c.date_of_birth BETWEEN ? AND ?';
+    queryParams.push(dateOfBirthStart, dateOfBirthEnd);
+  }
+
+  if (organization) {
+    query += ' AND LOWER(c.organization) LIKE ?';
+    queryParams.push('%' + organization.toLowerCase() + '%');
+  }
+
+  if (job) {
+    query += ' AND LOWER(c.job_title) LIKE ?';
+    queryParams.push('%' + job.toLowerCase() + '%');
+  }
+
+  if (relation) {
+    query += ' AND LOWER(c.relation) LIKE ?';
+    queryParams.push('%' + relation.toLowerCase() + '%');
+  }
+
+  pool.query(query, queryParams, (error, results) => {
+    if (error) {
+      console.error('Error executing MySQL query:', error);
+      res.status(500).json({ error: 'Internal server error' });
+      return;
+    }
+    res.json(results);
+  });
+});
+
+
 // Start server
 app.listen(port, () =>
   console.log(`PhoneBook API running on http://localhost:${port}`)
