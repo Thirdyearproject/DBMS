@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+
 import 'add_contact.dart';
 import 'update_contact.dart';
 import 'about_contact.dart';
@@ -33,6 +34,7 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key, required this.title}) : super(key: key);
+
   final String title;
 
   @override
@@ -42,12 +44,21 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   List<Contact> contacts = [];
   String searchQuery = '';
-  String selectedFilterOption = 'City'; // Initially selected filter option
   bool isLoading = false;
+
+  // Filter fields
   String cityFilter = '';
+  String dateOfBirthStartFilter = '';
+  String dateOfBirthEndFilter = '';
   String organizationFilter = '';
   String jobFilter = '';
   String relationFilter = '';
+
+  // Text editing controllers
+  TextEditingController dateOfBirthStartFilterController =
+      TextEditingController();
+  TextEditingController dateOfBirthEndFilterController =
+      TextEditingController();
 
   @override
   void initState() {
@@ -59,8 +70,20 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       isLoading = true;
     });
-    final response =
-        await http.get(Uri.parse('http://localhost:3000/contacts'));
+
+    final queryParams = {
+      'searchQuery': searchQuery,
+      'city': cityFilter,
+      'dateOfBirthStart': dateOfBirthStartFilter,
+      'dateOfBirthEnd': dateOfBirthEndFilter,
+      'organization': organizationFilter,
+      'job': jobFilter,
+      'relation': relationFilter,
+    };
+
+    final uri = Uri.http('localhost:3000', '/filter', queryParams);
+
+    final response = await http.get(uri);
     if (response.statusCode == 200) {
       Iterable l = json.decode(response.body);
       contacts = List<Contact>.from(
@@ -68,12 +91,13 @@ class _MyHomePageState extends State<MyHomePage> {
     } else {
       throw Exception('Failed to load contacts');
     }
+
     setState(() {
       isLoading = false;
     });
   }
 
-  _deleteContact(int id) async {
+  Future<void> _deleteContact(int id) async {
     final response =
         await http.delete(Uri.parse('http://localhost:3000/contacts/$id'));
     if (response.statusCode == 200) {
@@ -95,22 +119,11 @@ class _MyHomePageState extends State<MyHomePage> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        actions: [
-          // Filter button with only the icon
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: () {
-              showFilterOptions(context);
-            },
-          ),
-        ],
       ),
       body: Container(
         child: contacts.isEmpty && !isLoading
             ? const Center(
-                child: Text(
-                  'No contacts found.',
-                ),
+                child: Text('No contacts found.'),
               )
             : Column(
                 children: [
@@ -139,7 +152,6 @@ class _MyHomePageState extends State<MyHomePage> {
                           ),
                         ),
                         SizedBox(width: 10),
-                        // Filter button with only the icon
                         IconButton(
                           icon: const Icon(Icons.filter_list),
                           onPressed: () {
@@ -244,7 +256,7 @@ class _MyHomePageState extends State<MyHomePage> {
             tooltip: 'Add Contact',
             child: const Icon(Icons.add),
           ),
-          SizedBox(height: 16), // Adjust spacing between buttons as needed
+          SizedBox(height: 16),
           FloatingActionButton(
             onPressed: () {
               _fetchContacts();
@@ -257,75 +269,121 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  // Function to show dropdown menu for filter options
   void showFilterOptions(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Select Filter Option'),
-          content: DropdownButton<String>(
-            value: selectedFilterOption,
-            onChanged: (String? newValue) {
-              setState(() {
-                selectedFilterOption = newValue!;
-              });
-              // Apply filter logic here based on selectedFilterOption
-              if (selectedFilterOption == 'City' ||
-                  selectedFilterOption == 'Organization' ||
-                  selectedFilterOption == 'Job' ||
-                  selectedFilterOption == 'Relation') {
-                showTextFilterDialog(
-                    context, 'Enter ${selectedFilterOption}', applyFilter);
-              }
-              Navigator.of(context).pop();
-            },
-            items: <String>[
-              'City',
-              'Date of Birth Range',
-              'Organization',
-              'Job',
-              'Relation'
-            ].map<DropdownMenuItem<String>>((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
-          ),
-        );
-      },
-    );
-  }
-
-  void showTextFilterDialog(
-      BuildContext context, String hintText, Function(String) applyFilter) {
-    String filterValue = '';
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Enter $hintText'),
-          content: TextField(
-            onChanged: (value) {
-              filterValue = value;
-            },
-            decoration: InputDecoration(
-              hintText: 'Enter $hintText',
-            ),
+          title: Text('Filter Contacts'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                decoration: InputDecoration(
+                  hintText: 'City',
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    cityFilter = value;
+                  });
+                },
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: dateOfBirthStartFilterController,
+                      decoration: InputDecoration(
+                        hintText: 'Start Date (yyyy-mm-dd)',
+                      ),
+                      onTap: () async {
+                        DateTime? pickedDate = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime(1900),
+                          lastDate: DateTime(2100),
+                        );
+                        if (pickedDate != null) {
+                          setState(() {
+                            dateOfBirthStartFilter =
+                                "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+                            dateOfBirthStartFilterController.text =
+                                dateOfBirthStartFilter;
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: dateOfBirthEndFilterController,
+                      decoration: InputDecoration(
+                        hintText: 'End Date (yyyy-mm-dd)',
+                      ),
+                      onTap: () async {
+                        DateTime? pickedDate = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime(1900),
+                          lastDate: DateTime(2100),
+                        );
+                        if (pickedDate != null) {
+                          setState(() {
+                            dateOfBirthEndFilter =
+                                "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+                            dateOfBirthEndFilterController.text =
+                                dateOfBirthEndFilter;
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              TextField(
+                decoration: InputDecoration(
+                  hintText: 'Organization',
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    organizationFilter = value;
+                  });
+                },
+              ),
+              TextField(
+                decoration: InputDecoration(
+                  hintText: 'Job',
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    jobFilter = value;
+                  });
+                },
+              ),
+              TextField(
+                decoration: InputDecoration(
+                  hintText: 'Relation',
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    relationFilter = value;
+                  });
+                },
+              ),
+            ],
           ),
           actions: <Widget>[
             TextButton(
               onPressed: () {
-                applyFilter(filterValue);
+                _fetchContacts();
                 Navigator.of(context).pop();
               },
               child: Text('Apply'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop();
               },
               child: Text('Cancel'),
             ),
@@ -334,67 +392,15 @@ class _MyHomePageState extends State<MyHomePage> {
       },
     );
   }
-
-  void applyFilter(String filterValue) {
-    // Update the filter value based on the selected filter option
-    if (selectedFilterOption == 'City') {
-      cityFilter = filterValue;
-    } else if (selectedFilterOption == 'Organization') {
-      organizationFilter = filterValue;
-    } else if (selectedFilterOption == 'Job') {
-      jobFilter = filterValue;
-    } else if (selectedFilterOption == 'Relation') {
-      relationFilter = filterValue;
-    }
-
-    // Construct the query string
-    String queryString = '?';
-    if (cityFilter.isNotEmpty) {
-      queryString += 'city=$cityFilter&';
-    }
-    if (organizationFilter.isNotEmpty) {
-      queryString += 'organization=$organizationFilter&';
-    }
-    if (jobFilter.isNotEmpty) {
-      queryString += 'job=$jobFilter&';
-    }
-    if (relationFilter.isNotEmpty) {
-      queryString += 'relation=$relationFilter&';
-    }
-
-    // Remove the trailing '&' character
-    queryString = queryString.substring(0, queryString.length - 1);
-
-    // Make the API call with the constructed query string
-    _fetchContactsWithFilters(queryString);
-  }
-
-  Future<void> _fetchContactsWithFilters(String queryString) async {
-    setState(() {
-      isLoading = true;
-    });
-
-    final response =
-        await http.get(Uri.parse('http://localhost:3000/contacts$queryString'));
-    if (response.statusCode == 200) {
-      Iterable l = json.decode(response.body);
-      contacts = List<Contact>.from(
-          l.map((model) => Contact.fromJson(model)).toList());
-    } else {
-      throw Exception('Failed to load contacts');
-    }
-
-    setState(() {
-      isLoading = false;
-    });
-  }
 }
 
 class Contact {
   final int id;
   final String name;
   bool isHovered = false;
+
   Contact({required this.id, required this.name});
+
   factory Contact.fromJson(Map<String, dynamic> json) {
     return Contact(
       id: json['contact_id'],
