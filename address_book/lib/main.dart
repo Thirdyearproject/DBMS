@@ -71,25 +71,37 @@ class _MyHomePageState extends State<MyHomePage> {
       isLoading = true;
     });
 
-    final queryParams = {
-      'searchQuery': searchQuery,
-      'city': cityFilter,
-      'dateOfBirthStart': dateOfBirthStartFilter,
-      'dateOfBirthEnd': dateOfBirthEndFilter,
-      'organization': organizationFilter,
-      'job': jobFilter,
-      'relation': relationFilter,
-    };
+    if (areFiltersApplied()) {
+      final queryParams = {
+        'searchQuery': searchQuery,
+        'city': cityFilter,
+        'dateOfBirthStart': dateOfBirthStartFilter,
+        'dateOfBirthEnd': dateOfBirthEndFilter,
+        'organization': organizationFilter,
+        'job': jobFilter,
+        'relation': relationFilter,
+      };
 
-    final uri = Uri.http('localhost:3000', '/filter', queryParams);
+      final uri = Uri.http('localhost:3000', '/filter', queryParams);
 
-    final response = await http.get(uri);
-    if (response.statusCode == 200) {
-      Iterable l = json.decode(response.body);
-      contacts = List<Contact>.from(
-          l.map((model) => Contact.fromJson(model)).toList());
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        Iterable l = json.decode(response.body);
+        contacts = List<Contact>.from(
+            l.map((model) => Contact.fromJson(model)).toList());
+      } else {
+        throw Exception('Failed to load contacts');
+      }
     } else {
-      throw Exception('Failed to load contacts');
+      final response =
+          await http.get(Uri.parse('http://localhost:3000/contacts'));
+      if (response.statusCode == 200) {
+        Iterable l = json.decode(response.body);
+        contacts = List<Contact>.from(
+            l.map((model) => Contact.fromJson(model)).toList());
+      } else {
+        throw Exception('Failed to load contacts');
+      }
     }
 
     setState(() {
@@ -150,6 +162,22 @@ class _MyHomePageState extends State<MyHomePage> {
                               contentPadding: const EdgeInsets.all(15.0),
                             ),
                           ),
+                        ),
+                        SizedBox(width: 10),
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              // Clear all filters
+                              cityFilter = '';
+                              dateOfBirthStartFilter = '';
+                              dateOfBirthEndFilter = '';
+                              organizationFilter = '';
+                              jobFilter = '';
+                              relationFilter = '';
+                            });
+                            _fetchContacts(); // Refetch contacts
+                          },
+                          child: const Icon(Icons.filter_alt_off),
                         ),
                         SizedBox(width: 10),
                         IconButton(
@@ -391,6 +419,15 @@ class _MyHomePageState extends State<MyHomePage> {
         );
       },
     );
+  }
+
+  bool areFiltersApplied() {
+    return cityFilter.isNotEmpty ||
+        dateOfBirthStartFilter.isNotEmpty ||
+        dateOfBirthEndFilter.isNotEmpty ||
+        organizationFilter.isNotEmpty ||
+        jobFilter.isNotEmpty ||
+        relationFilter.isNotEmpty;
   }
 }
 

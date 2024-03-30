@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+// Import the UpdateContact page if not already imported
+import 'update_contact.dart';
+
 class AboutContact extends StatefulWidget {
   final int contactId;
 
@@ -100,6 +103,17 @@ class _AboutContactState extends State<AboutContact> {
                   ),
                 )
               : Center(child: Text('No contact data available')),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => UpdateContact(contactId: widget.contactId),
+            ),
+          );
+        },
+        child: Icon(Icons.edit),
+      ),
     );
   }
 
