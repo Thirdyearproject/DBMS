@@ -54,6 +54,37 @@ class _AddContactState extends State<AddContact> {
     }
   }
 
+  String? validatePhoneNumber(String? value) {
+    if (value == null || value.isEmpty) {
+      return null; // Allow empty field
+    }
+    if (!RegExp(r'^[0-9]{10}$').hasMatch(value)) {
+      return 'Please enter a valid 10-digit phone number';
+    }
+    return null; // No error
+  }
+
+  String? validatePhoneNumber1(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter a valid 10-digit phone number'; // Allow empty field
+    }
+    if (!RegExp(r'^[0-9]{10}$').hasMatch(value)) {
+      return 'Please enter a valid 10-digit phone number';
+    }
+    return null; // No error
+  }
+
+  String? validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return null;
+    }
+    if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+        .hasMatch(value)) {
+      return 'Please enter a valid email address';
+    }
+    return null; // No error
+  }
+
   @override
   Widget build(BuildContext context) {
     final keyboardPadding = MediaQuery.of(context).viewInsets.bottom;
@@ -153,12 +184,7 @@ class _AddContactState extends State<AddContact> {
                           fillColor: Colors.white,
                           filled: true,
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a phone number';
-                          }
-                          return null;
-                        },
+                        validator: validatePhoneNumber1,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -185,6 +211,7 @@ class _AddContactState extends State<AddContact> {
                           fillColor: Colors.white,
                           filled: true,
                         ),
+                        validator: validatePhoneNumber,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -211,6 +238,7 @@ class _AddContactState extends State<AddContact> {
                           fillColor: Colors.white,
                           filled: true,
                         ),
+                        validator: validatePhoneNumber,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -237,6 +265,7 @@ class _AddContactState extends State<AddContact> {
                           fillColor: Colors.white,
                           filled: true,
                         ),
+                        validator: validateEmail,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -263,6 +292,7 @@ class _AddContactState extends State<AddContact> {
                           fillColor: Colors.white,
                           filled: true,
                         ),
+                        validator: validateEmail,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -289,6 +319,7 @@ class _AddContactState extends State<AddContact> {
                           fillColor: Colors.white,
                           filled: true,
                         ),
+                        validator: validateEmail,
                       ),
                     ),
                     const SizedBox(width: 16),
