@@ -12,6 +12,37 @@ class UpdateContact extends StatefulWidget {
   State<UpdateContact> createState() => _UpdateContactPageState();
 }
 
+String? validatePhoneNumber(String? value) {
+  if (value == null || value.isEmpty) {
+    return null; // Allow empty field
+  }
+  if (!RegExp(r'^[0-9]{10}$').hasMatch(value)) {
+    return 'Please enter a valid 10-digit phone number';
+  }
+  return null; // No error
+}
+
+String? validatePhoneNumber1(String? value) {
+  if (value == null || value.isEmpty) {
+    return 'Please enter a valid 10-digit phone number'; // Allow empty field
+  }
+  if (!RegExp(r'^[0-9]{10}$').hasMatch(value)) {
+    return 'Please enter a valid 10-digit phone number';
+  }
+  return null; // No error
+}
+
+String? validateEmail(String? value) {
+  if (value == null || value.isEmpty) {
+    return null;
+  }
+  if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+      .hasMatch(value)) {
+    return 'Please enter a valid email address';
+  }
+  return null; // No error
+}
+
 class _UpdateContactPageState extends State<UpdateContact> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
@@ -38,7 +69,7 @@ class _UpdateContactPageState extends State<UpdateContact> {
   late TextEditingController _relationshipTypeController;
   late TextEditingController _tagsController;
   late TextEditingController _notesController;
-  late String _initialContactName; // To store initially fetched name
+  //late String _initialContactName; // To store initially fetched name
 
   bool isLoading = false;
 
@@ -213,17 +244,11 @@ class _UpdateContactPageState extends State<UpdateContact> {
                   children: [
                     Expanded(
                       child: TextFormField(
-                        controller: _phoneNumber1Controller,
-                        decoration: const InputDecoration(
-                          labelText: 'Phone Number 1',
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a phone number';
-                          }
-                          return null;
-                        },
-                      ),
+                          controller: _phoneNumber1Controller,
+                          decoration: const InputDecoration(
+                            labelText: 'Phone Number 1',
+                          ),
+                          validator: validatePhoneNumber1),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -245,6 +270,7 @@ class _UpdateContactPageState extends State<UpdateContact> {
                         decoration: const InputDecoration(
                           labelText: 'Phone Number 2',
                         ),
+                        validator: validatePhoneNumber,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -267,6 +293,7 @@ class _UpdateContactPageState extends State<UpdateContact> {
                         decoration: const InputDecoration(
                           labelText: 'Phone Number 3',
                         ),
+                        validator: validatePhoneNumber,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -289,6 +316,7 @@ class _UpdateContactPageState extends State<UpdateContact> {
                         decoration: const InputDecoration(
                           labelText: 'Email Address1',
                         ),
+                        validator: validateEmail,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -311,6 +339,7 @@ class _UpdateContactPageState extends State<UpdateContact> {
                         decoration: const InputDecoration(
                           labelText: 'Email Address2',
                         ),
+                        validator: validateEmail,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -333,6 +362,7 @@ class _UpdateContactPageState extends State<UpdateContact> {
                         decoration: const InputDecoration(
                           labelText: 'Email Address3',
                         ),
+                        validator: validateEmail,
                       ),
                     ),
                     const SizedBox(width: 16),
