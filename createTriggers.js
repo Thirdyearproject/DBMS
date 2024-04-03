@@ -122,23 +122,25 @@ function createTriggers() {
 
             // Now create the trigger
             const createTriggerQuery = `
-                CREATE TRIGGER update_phone_numbers
-                BEFORE UPDATE ON phone_numbers
-                FOR EACH ROW
-                BEGIN
-                    IF LENGTH(NEW.phone_number1) != 10 THEN
+                        CREATE TRIGGER update_phone_numbers
+                        BEFORE UPDATE ON phone_numbers
+                        FOR EACH ROW
+                        BEGIN
+                        IF (NEW.phone_number1 IS NOT NULL AND LENGTH(NEW.phone_number1) != 10 AND NEW.phone_number1 != '') THEN
                         SIGNAL SQLSTATE '45000'
-                        SET MESSAGE_TEXT = 'Phone number must be 10 digits long';
+                        SET MESSAGE_TEXT = 'Phone number must be NULL or 10 digits long';
                     END IF;
-                    IF NEW.phone_number2 IS NOT NULL AND LENGTH(NEW.phone_number2) != 10 THEN
+                    
+                    IF (NEW.phone_number2 IS NOT NULL AND LENGTH(NEW.phone_number2) != 10 AND NEW.phone_number2 != '') THEN
                         SIGNAL SQLSTATE '45000'
-                        SET MESSAGE_TEXT = 'Phone number must be 10 digits long';
+                        SET MESSAGE_TEXT = 'Phone number must be NULL or 10 digits long';
                     END IF;
-                    IF NEW.phone_number3 IS NOT NULL AND LENGTH(NEW.phone_number3) != 10 THEN
+                
+                    IF (NEW.phone_number3 IS NOT NULL AND LENGTH(NEW.phone_number3) != 10 AND NEW.phone_number3 != '') THEN
                         SIGNAL SQLSTATE '45000'
-                        SET MESSAGE_TEXT = 'Phone number must be 10 digits long';
+                        SET MESSAGE_TEXT = 'Phone number must be NULL or 10 digits long';
                     END IF;
-                END`;
+                        END`;
 
             // Execute query to create the trigger
             pool.query(createTriggerQuery, (error, results, fields) => {
