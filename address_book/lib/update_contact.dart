@@ -101,6 +101,23 @@ class _UpdateContactPageState extends State<UpdateContact> {
     _relationshipTypeController = TextEditingController();
     _tagsController = TextEditingController();
     _notesController = TextEditingController();
+    // DateTime? _selectedDate;
+    //date picker
+    // Future<void> _selectDate(BuildContext context) async {
+    //   final DateTime? picked = await showDatePicker(
+    //     context: context,
+    //     initialDate: DateTime.now(),
+    //     firstDate: DateTime(1900),
+    //     lastDate: DateTime.now(),
+    //   );
+    //   if (picked != null && picked != _selectedDate) {
+    //     setState(() {
+    //       _selectedDate = picked;
+    //       _dateOfBirthController.text =
+    //           '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}';
+    //     });
+    //   }
+    // }
   }
 
   Future<void> _fetchInitialContactDetails() async {
@@ -115,8 +132,8 @@ class _UpdateContactPageState extends State<UpdateContact> {
         _cityController.text = data['city'] ?? '';
         _stateController.text = data['state'] ?? '';
         _pinCodeController.text = data['pin_code'] ?? '';
-        _phoneNumber1Controller.text = data['type1'] ?? '';
-        _phoneType1Controller.text = data['phone_number1'] ?? '';
+        _phoneNumber1Controller.text = data['phone_number1'] ?? '';
+        _phoneType1Controller.text = data['phone_type1'] ?? '';
         _phoneNumber2Controller.text = data['phone_number2'] ?? '';
         _phoneType2Controller.text = data['phone_type2'] ?? '';
         _phoneNumber3Controller.text = data['phone_number3'] ?? '';
@@ -146,15 +163,65 @@ class _UpdateContactPageState extends State<UpdateContact> {
   }
 
   Future<void> _updateContact() async {
+    final name = _nameController.text;
+    final locality = _localityController.text;
+    final city = _cityController.text;
+    final state = _stateController.text;
+    final pinCode = _pinCodeController.text;
+    final phoneNumber1 = _phoneNumber1Controller.text;
+    final phoneType1 = _phoneType1Controller.text;
+    final phoneNumber2 = _phoneNumber2Controller.text;
+    final phoneType2 = _phoneType2Controller.text;
+    final phoneNumber3 = _phoneNumber3Controller.text;
+    final phoneType3 = _phoneType3Controller.text;
+    final emailAddress1 = _emailAddress1Controller.text;
+    final emailType1 = _emailType1Controller.text;
+    final emailAddress2 = _emailAddress2Controller.text;
+    final emailType2 = _emailType2Controller.text;
+    final emailAddress3 = _emailAddress3Controller.text;
+    final emailType3 = _emailType3Controller.text;
+    final organization = _organizationController.text;
+    final jobTitle = _jobTitleController.text;
+    // final dateOfBirth =
+    //     _selectedDate != null ? _dateOfBirthController.text : null;
+    final websiteUrl = _websiteUrlController.text;
+    final relationshipType = _relationshipTypeController.text;
+    final tags = _tagsController.text;
+    final notes = _notesController.text;
+
+    // Create the request body
+    final body = jsonEncode({
+      'name': name,
+      'locality': locality,
+      'city': city,
+      'state': state,
+      'pin_code': pinCode,
+      'phone_number1': phoneNumber1,
+      'phone_type1': phoneType1,
+      'phone_number2': phoneNumber2,
+      'phone_type2': phoneType2,
+      'phone_number3': phoneNumber3,
+      'phone_type3': phoneType3,
+      'email_address1': emailAddress1,
+      'email_type1': emailType1,
+      'email_address2': emailAddress2,
+      'email_type2': emailType2,
+      'email_address3': emailAddress3,
+      'email_type3': emailType3,
+      'organization': organization,
+      'job_title': jobTitle,
+      // 'date_of_birth': dateOfBirth,
+      'website_url': websiteUrl,
+      'relationship_type': relationshipType,
+      'tags': tags,
+      'notes': notes,
+    });
     setState(() => isLoading = true);
     try {
       // Replace with your actual REST API endpoint for updating contact
       final String url = 'http://localhost:3000/contacts/${widget.contactId}';
-      final response = await http.put(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'name': _nameController.text}),
-      );
+      final response = await http.put(Uri.parse(url),
+          headers: {'Content-Type': 'application/json'}, body: body);
       if (response.statusCode == 200) {
         // Success! Navigate back, potentially with a success message
         Navigator.pop(context, 'Contact updated successfully!');
@@ -335,7 +402,7 @@ class _UpdateContactPageState extends State<UpdateContact> {
                   children: [
                     Expanded(
                       child: TextFormField(
-                        // controller: _emailAddress2Controller,
+                        controller: _emailAddress2Controller,
                         decoration: const InputDecoration(
                           labelText: 'Email Address2',
                         ),
@@ -345,7 +412,7 @@ class _UpdateContactPageState extends State<UpdateContact> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: TextFormField(
-                        // controller: _emailType2Controller,
+                        controller: _emailType2Controller,
                         decoration: const InputDecoration(
                           labelText: 'Email2 Type',
                         ),
@@ -358,7 +425,7 @@ class _UpdateContactPageState extends State<UpdateContact> {
                   children: [
                     Expanded(
                       child: TextFormField(
-                        // controller: _emailAddress3Controller,
+                        controller: _emailAddress3Controller,
                         decoration: const InputDecoration(
                           labelText: 'Email Address3',
                         ),
@@ -368,7 +435,7 @@ class _UpdateContactPageState extends State<UpdateContact> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: TextFormField(
-                        // controller: _emailType3Controller,
+                        controller: _emailType3Controller,
                         decoration: const InputDecoration(
                           labelText: 'Email3 Type',
                         ),
@@ -381,7 +448,7 @@ class _UpdateContactPageState extends State<UpdateContact> {
                   children: [
                     Expanded(
                       child: TextFormField(
-                        // controller: _organizationController,
+                        controller: _organizationController,
                         decoration: const InputDecoration(
                           labelText: 'Organization',
                         ),
@@ -390,7 +457,7 @@ class _UpdateContactPageState extends State<UpdateContact> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: TextFormField(
-                        // controller: _jobTitleController,
+                        controller: _jobTitleController,
                         decoration: const InputDecoration(
                           labelText: 'Job Title',
                         ),
@@ -403,7 +470,7 @@ class _UpdateContactPageState extends State<UpdateContact> {
                   children: [
                     Expanded(
                       child: TextFormField(
-                        // controller: _dateOfBirthController,
+                        controller: _dateOfBirthController,
                         decoration: const InputDecoration(
                           labelText: 'Date of Birth',
                         ),
@@ -416,7 +483,7 @@ class _UpdateContactPageState extends State<UpdateContact> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: TextFormField(
-                        // controller: _websiteUrlController,
+                        controller: _websiteUrlController,
                         decoration: const InputDecoration(
                           labelText: 'Website URL',
                         ),
