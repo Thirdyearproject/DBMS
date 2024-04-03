@@ -1,12 +1,29 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:window_manager/window_manager.dart';
 
 import 'add_contact.dart';
 import 'update_contact.dart';
 import 'about_contact.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // Ensure Flutter is initialized
+  WidgetsFlutterBinding.ensureInitialized();
+  // Must add this line.
+  await windowManager.ensureInitialized();
+
+  WindowOptions windowOptions = WindowOptions(
+    size: Size(400, 600),
+    center: true,
+    backgroundColor: Colors.transparent,
+    skipTaskbar: false,
+    titleBarStyle: TitleBarStyle.hidden,
+  );
+  windowManager.waitUntilReadyToShow(windowOptions, () async {
+    await windowManager.show();
+    await windowManager.focus();
+  });
   runApp(const MyApp());
 }
 
@@ -16,13 +33,17 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Desktop Address Book',
+      title: 'Address Book',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSwatch().copyWith(
-          primary: Colors.blue,
-          secondary: Colors.lightBlue,
-        ),
+            primary: Colors.blue,
+            // Color.fromARGB(255, 241, 240, 237), // Purple primary color
+            secondary: Colors.lightBlue
+            //Color.fromARGB(255, 246, 88, 20), // Pink secondary color
+            ),
+        //scaffoldBackgroundColor: Color.fromARGB(255, 203, 120, 217),
       ),
       home: const MyHomePage(title: 'Flutter Desktop Address Book'),
       routes: {
@@ -145,13 +166,17 @@ class _MyHomePageState extends State<MyHomePage> {
                       children: [
                         Expanded(
                           child: TextField(
-                            onChanged: (value) => setState(
-                                () => searchQuery = value.toLowerCase()),
+                            onChanged: (value) {
+                              setState(() {
+                                searchQuery = value.toLowerCase();
+                              });
+                              _fetchContacts();
+                            },
                             decoration: InputDecoration(
                               hintText: 'Search contacts',
                               prefixIcon: const Icon(Icons.search),
                               filled: true,
-                              fillColor: Colors.grey[200],
+                              // fillColor: Color.fromARGB(255, 225, 153, 201),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10.0),
                                 borderSide: const BorderSide(
@@ -199,8 +224,16 @@ class _MyHomePageState extends State<MyHomePage> {
                             itemBuilder: (context, index) {
                               Contact contact = contacts[index];
                               if (contact.name
-                                  .toLowerCase()
-                                  .contains(searchQuery.toLowerCase())) {
+                                      .toLowerCase()
+                                      .contains(searchQuery) ||
+                                  (contact.phoneNumber1 != null &&
+                                      contact.phoneNumber1!
+                                          .toLowerCase()
+                                          .contains(searchQuery)) ||
+                                  (contact.emailAddress1 != null &&
+                                      contact.emailAddress1!
+                                          .toLowerCase()
+                                          .contains(searchQuery))) {
                                 return GestureDetector(
                                   onTap: () {
                                     Navigator.push(
@@ -218,15 +251,75 @@ class _MyHomePageState extends State<MyHomePage> {
                                     onExit: (event) => setState(
                                         () => contact.isHovered = false),
                                     child: Card(
+                                      // color: Color.fromARGB(255, 238, 154, 202),
                                       child: ListTile(
                                         leading: const CircleAvatar(
+                                          //backgroundColor: Color.fromARGB(
+                                          // 255, 238, 154, 202),
                                           child: Icon(Icons.person),
                                         ),
-                                        title: Text(
-                                          contact.name,
-                                          textAlign: contact.isHovered
-                                              ? TextAlign.left
-                                              : TextAlign.center,
+                                        title: AnimatedSwitcher(
+                                          duration: Duration(milliseconds: 300),
+                                          child: contact.isHovered
+                                              ? SizedBox(
+                                                  width: 200,
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        contact.name,
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      if (contact
+                                                              .phoneNumber1 !=
+                                                          null)
+                                                        Text(
+                                                          contact.phoneNumber1!,
+                                                          style: TextStyle(
+                                                            fontSize: 12,
+                                                          ),
+                                                        ),
+                                                    ],
+                                                  ),
+                                                )
+                                              : SizedBox(
+                                                  width: 200,
+                                                  child: Column(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      Text(
+                                                        contact.name,
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      if (contact
+                                                              .phoneNumber1 !=
+                                                          null)
+                                                        Text(
+                                                          contact.phoneNumber1!,
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          style: TextStyle(
+                                                            fontSize: 12,
+                                                          ),
+                                                        ),
+                                                    ],
+                                                  ),
+                                                ),
                                         ),
                                         trailing: contact.isHovered
                                             ? Row(
@@ -277,6 +370,7 @@ class _MyHomePageState extends State<MyHomePage> {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           FloatingActionButton(
+            // backgroundColor: Color.fromARGB(255, 238, 154, 202),
             onPressed: () async {
               await Navigator.pushNamed(context, '/add-contact');
               _fetchContacts();
@@ -286,6 +380,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           SizedBox(height: 16),
           FloatingActionButton(
+            //backgroundColor: Color.fromARGB(255, 238, 154, 202),
             onPressed: () {
               _fetchContacts();
             },
@@ -434,14 +529,23 @@ class _MyHomePageState extends State<MyHomePage> {
 class Contact {
   final int id;
   final String name;
+  final String? phoneNumber1;
+  final String? emailAddress1;
   bool isHovered = false;
 
-  Contact({required this.id, required this.name});
+  Contact({
+    required this.id,
+    required this.name,
+    this.phoneNumber1,
+    this.emailAddress1,
+  });
 
   factory Contact.fromJson(Map<String, dynamic> json) {
     return Contact(
       id: json['contact_id'],
       name: json['name'],
+      phoneNumber1: json['phone_number1'],
+      emailAddress1: json['email_address1'],
     );
   }
 }

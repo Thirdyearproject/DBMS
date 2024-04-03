@@ -8,7 +8,7 @@ import 'update_contact.dart';
 class AboutContact extends StatefulWidget {
   final int contactId;
 
-  const AboutContact({Key? key, required this.contactId}) : super(key: key);
+  const AboutContact({super.key, required this.contactId});
 
   @override
   _AboutContactState createState() => _AboutContactState();
@@ -58,7 +58,7 @@ class _AboutContactState extends State<AboutContact> {
         title: Text('About ${contactData?['name'] ?? 'Contact'}'),
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : contactData != null
               ? SingleChildScrollView(
                   child: Padding(
@@ -102,7 +102,7 @@ class _AboutContactState extends State<AboutContact> {
                     ),
                   ),
                 )
-              : Center(child: Text('No contact data available')),
+              : const Center(child: Text('No contact data available')),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
@@ -112,7 +112,7 @@ class _AboutContactState extends State<AboutContact> {
             ),
           );
         },
-        child: Icon(Icons.edit),
+        child: const Icon(Icons.edit),
       ),
     );
   }
@@ -125,7 +125,7 @@ class _AboutContactState extends State<AboutContact> {
         children: [
           Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 18.0,
               fontWeight: FontWeight.bold,
               color: Colors.blue, // Adjust color as needed
@@ -133,7 +133,7 @@ class _AboutContactState extends State<AboutContact> {
           ),
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 16.0,
             ),
           ),
@@ -154,7 +154,7 @@ class _AboutContactState extends State<AboutContact> {
                 flex: 2,
                 child: Text(
                   label,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 18.0,
                     fontWeight: FontWeight.bold,
                     color: Colors.blue,
@@ -165,7 +165,7 @@ class _AboutContactState extends State<AboutContact> {
                 flex: 3,
                 child: Text(
                   '${values[i]} (${types[i] ?? 'N/A'})',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 16.0,
                   ),
                 ),
