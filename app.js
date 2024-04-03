@@ -68,6 +68,7 @@ const insertContactWithTransaction = (contactData) => {
 
 app.post("/contacts", (req, res) => {
   const {
+    userid,
     name,
     locality,
     city,
@@ -92,6 +93,10 @@ app.post("/contacts", (req, res) => {
     notes,
     tags,
     relationship_type,
+    visible_to_all,
+    share_userid1,
+    share_userid2,
+    share_userid3
   } = req.body;
 
   pool.getConnection((err, connection) => {
@@ -110,8 +115,8 @@ app.post("/contacts", (req, res) => {
 
       // Insert contact
       connection.query(
-        "INSERT INTO contacts (name, organization, job_title, date_of_birth, website_url, notes, tags) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        [name, organization, job_title, date_of_birth, website_url, notes, tags],
+        "INSERT INTO contacts (userid, name, organization, job_title, date_of_birth, website_url, notes, tags, visible_to_all) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [userid, name, organization, job_title, date_of_birth, website_url, notes, tags, visible_to_all],
         (error, contactResult) => {
           if (error) {
             console.error("Error inserting contact:", error);
@@ -123,7 +128,7 @@ app.post("/contacts", (req, res) => {
 
           // Insert address
           connection.query(
-            "INSERT INTO addresses (Address_contact_id,locality, city, state, pin_code) VALUES (?,?, ?, ?, ?)",
+            "INSERT INTO addresses (Address_contact_id, locality, city, state, pin_code) VALUES (?,?,?,?,?)",
             [contactResult.insertId, locality, city, state, pin_code],
             (error, addressResult) => {
               if (error) {
@@ -189,6 +194,50 @@ app.post("/contacts", (req, res) => {
                                 res.status(500).json({ error: "Error creating relationship." });
                               });
                             }
+                            
+                            // Insert into share table
+                            connection.query(
+                              "INSERT INTO share (contactid, share_userid1, share_userid2, share_userid3) VALUES (?, ?, ?, ?)",
+                              [contactResult.insertId, share_userid1, share_userid2, share_userid3],
+                              (error, shareResult) => {
+                                if (error) {
+                                  console.error("Error inserting share:", error);
+                                  return connection.rollback(() => {
+                                    connection.release();
+                                    res.status(500).json({ error: "Error creating contact." });
+                                  });
+                                }
+                                // Commit transaction if everything is successful
+                                connection.commit((err) => {
+                                  if (err) {
+                                    console.error("Error committing transaction:", err);
+                                    return connection.rollback(() => {
+                                      connection.release();
+                                      res.status(500).json({ error: "Error creating contact." });
+                                    });
+                                  }
+                                  connection.release();
+                                  res.status(201).json({
+                                    message: `Contact added with ID: ${contactResult.insertId}`,
+                                  });
+                                });
+                              }
+                            );
+                          }
+                        );
+                      } else {
+                        // Insert into share table
+                        connection.query(
+                          "INSERT INTO share (contactid, share_userid1, share_userid2, share_userid3) VALUES (?, ?, ?, ?)",
+                          [contactResult.insertId, share_userid1, share_userid2, share_userid3],
+                          (error, shareResult) => {
+                            if (error) {
+                              console.error("Error inserting share:", error);
+                              return connection.rollback(() => {
+                                connection.release();
+                                res.status(500).json({ error: "Error creating contact." });
+                              });
+                            }
                             // Commit transaction if everything is successful
                             connection.commit((err) => {
                               if (err) {
@@ -205,21 +254,6 @@ app.post("/contacts", (req, res) => {
                             });
                           }
                         );
-                      } else {
-                        // Commit transaction if everything is successful
-                        connection.commit((err) => {
-                          if (err) {
-                            console.error("Error committing transaction:", err);
-                            return connection.rollback(() => {
-                              connection.release();
-                              res.status(500).json({ error: "Error creating contact." });
-                            });
-                          }
-                          connection.release();
-                          res.status(201).json({
-                            message: `Contact added with ID: ${contactResult.insertId}`,
-                          });
-                        });
                       }
                     }
                   );
@@ -261,6 +295,9 @@ app.put("/contacts/:contactId", (req, res) => {
     notes,
     tags,
     relationship_type,
+    share_userid1,
+    share_userid2,
+    share_userid3
   } = req.body;
 
   // Update contact
@@ -344,15 +381,42 @@ app.put("/contacts/:contactId", (req, res) => {
                             .status(500)
                             .json({ error: "Error updating relationship." });
                         }
+                        
+                        // Update share
+                        pool.query(
+                          "UPDATE share SET share_userid1=?, share_userid2=?, share_userid3=? WHERE contactid=?",
+                          [share_userid1, share_userid2, share_userid3, contactId],
+                          (error, shareResult) => {
+                            if (error) {
+                              console.error("Error updating share:", error);
+                              return res
+                                .status(500)
+                                .json({ error: "Error updating share." });
+                            }
+                            res.status(200).json({
+                              message: `Contact with ID ${contactId} updated successfully.`,
+                            });
+                          }
+                        );
+                      }
+                    );
+                  } else {
+                    // Update share
+                    pool.query(
+                      "UPDATE share SET share_userid1=?, share_userid2=?, share_userid3=? WHERE contactid=?",
+                      [share_userid1, share_userid2, share_userid3, contactId],
+                      (error, shareResult) => {
+                        if (error) {
+                          console.error("Error updating share:", error);
+                          return res
+                            .status(500)
+                            .json({ error: "Error updating share." });
+                        }
                         res.status(200).json({
                           message: `Contact with ID ${contactId} updated successfully.`,
                         });
                       }
                     );
-                  } else {
-                    res.status(200).json({
-                      message: `Contact with ID ${contactId} updated successfully.`,
-                    });
                   }
                 }
               );
@@ -364,10 +428,11 @@ app.put("/contacts/:contactId", (req, res) => {
   );
 });
 
+
 app.delete("/contacts/:contactId", (req, res) => {
   const contactId = req.params.contactId;
 
-  // Delete associated records first (addresses, phone numbers, emails, relationships)
+  // Delete associated records first (addresses, phone numbers, emails, relationships, share)
   pool.query(
     "DELETE FROM addresses WHERE Address_contact_id = ?",
     [contactId],
@@ -410,20 +475,34 @@ app.delete("/contacts/:contactId", (req, res) => {
                       .json({ error: "Error deleting relationships." });
                   }
 
-                  // Once associated records are deleted, delete the contact
+                  // Delete from share table
                   pool.query(
-                    "DELETE FROM contacts WHERE contact_id = ?",
+                    "DELETE FROM share WHERE contactid = ?",
                     [contactId],
-                    (error, contactResult) => {
+                    (error, shareResult) => {
                       if (error) {
-                        console.error("Error deleting contact:", error);
+                        console.error("Error deleting share:", error);
                         return res
                           .status(500)
-                          .json({ error: "Error deleting contact." });
+                          .json({ error: "Error deleting share." });
                       }
-                      res.status(200).json({
-                        message: `Contact with ID ${contactId} and associated records deleted successfully.`,
-                      });
+
+                      // Once associated records and share entry are deleted, delete the contact
+                      pool.query(
+                        "DELETE FROM contacts WHERE contact_id = ?",
+                        [contactId],
+                        (error, contactResult) => {
+                          if (error) {
+                            console.error("Error deleting contact:", error);
+                            return res
+                              .status(500)
+                              .json({ error: "Error deleting contact." });
+                          }
+                          res.status(200).json({
+                            message: `Contact with ID ${contactId} and associated records deleted successfully.`,
+                          });
+                        }
+                      );
                     }
                   );
                 }
@@ -436,19 +515,26 @@ app.delete("/contacts/:contactId", (req, res) => {
   );
 });
 
-// Get all contacts
+
+// Get all contacts visible to all users
 app.get("/contacts", (req, res) => {
   const query = `
-        SELECT c.*, 
-               a.*, 
-               p.*, 
-               e.*, 
-               r.relationship_type 
-        FROM contacts c
-        LEFT JOIN addresses a ON c.contact_id = a.Address_contact_id
-        LEFT JOIN phone_numbers p ON c.contact_id = p.phone_contact_id
-        LEFT JOIN emails e ON c.contact_id = e.email_contact_id
-        LEFT JOIN relationships r ON c.contact_id = r.person_id
+      SELECT c.*, 
+      a.*, 
+      p.*, 
+      e.*, 
+      r.relationship_type,
+      s.share_userid1,
+      s.share_userid2,
+      s.share_userid3
+    FROM contacts c
+    LEFT JOIN addresses a ON c.contact_id = a.Address_contact_id
+    LEFT JOIN phone_numbers p ON c.contact_id = p.phone_contact_id
+    LEFT JOIN emails e ON c.contact_id = e.email_contact_id
+    LEFT JOIN relationships r ON c.contact_id = r.person_id
+    LEFT JOIN share s ON c.contact_id = s.contactid
+    WHERE c.visible_to_all = 1
+
     `;
 
   pool.query(query, (error, results) => {
@@ -460,6 +546,37 @@ app.get("/contacts", (req, res) => {
     }
   });
 });
+
+// Get contacts shared with the current user
+app.get("/contacts/:userId", (req, res) => {
+  const userId = req.params.userId;
+
+  const query = `
+    SELECT c.*, 
+           a.*, 
+           p.*, 
+           e.*, 
+           r.relationship_type 
+    FROM contacts c
+    LEFT JOIN addresses a ON c.contact_id = a.Address_contact_id
+    LEFT JOIN phone_numbers p ON c.contact_id = p.phone_contact_id
+    LEFT JOIN emails e ON c.contact_id = e.email_contact_id
+    LEFT JOIN relationships r ON c.contact_id = r.person_id
+    INNER JOIN share s ON c.contact_id = s.contactid
+    WHERE s.share_userid1 = ? OR s.share_userid2 = ? OR s.share_userid3 = ?
+  `;
+
+  pool.query(query, [userId, userId, userId], (error, results) => {
+    if (error) {
+      console.error("Error retrieving shared contacts:", error);
+      res.status(500).json({ error: "Internal server error" });
+    } else {
+      res.json(results);
+    }
+  });
+});
+
+
 // Get all emails
 app.get("/emails", (req, res) => {
   pool.query("SELECT * FROM emails", (error, results) => {
