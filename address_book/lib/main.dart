@@ -17,7 +17,7 @@ void main() async {
     center: true,
     backgroundColor: Colors.transparent,
     skipTaskbar: false,
-    titleBarStyle: TitleBarStyle.hidden,
+    //titleBarStyle: TitleBarStyle.hidden,
   );
 
   windowManager.waitUntilReadyToShow(windowOptions, () async {
@@ -66,6 +66,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  int? userId;
   TextEditingController usernameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   bool isLoading = false;
@@ -86,7 +87,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (response.statusCode == 200) {
       final userId = jsonDecode(response.body)['userId'];
-      // You can store userId or navigate to the main application screen
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(
+          'userId', userId!); // Store userId in SharedPreferences
       Navigator.pop(context); // Close the login window
     } else {
       print('Login failed');
@@ -112,7 +115,10 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (response.statusCode == 200) {
-      final userId = jsonDecode(response.body)['userId'];
+      userId = jsonDecode(response.body)['userId']; // Assign userId here
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(
+          'userId', userId!); // Store userId in SharedPreferences
       await signIn(); // Call signIn after successful signUp
     } else {
       print('Sign-up failed');
@@ -126,10 +132,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login / Sign Up'),
-        centerTitle: true,
-      ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -171,6 +173,8 @@ class _MyHomePageState extends State<MyHomePage> {
   String searchQuery = '';
   bool isLoading = false;
 
+  int? userId;
+
   // Filter fields
   String cityFilter = '';
   String dateOfBirthStartFilter = '';
@@ -195,6 +199,16 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     _fetchContacts();
+    _checkLoggedIn();
+  }
+
+  Future<void> _checkLoggedIn() async {
+    final prefs = await SharedPreferences.getInstance();
+    final storedUserId = prefs.getInt('userId');
+    setState(() {
+      isLoggedIn = storedUserId != null;
+      userId = storedUserId; // Assign userId here
+    });
   }
 
   Future<void> _fetchContacts() async {
@@ -210,10 +224,15 @@ class _MyHomePageState extends State<MyHomePage> {
         'dateOfBirthEnd': dateOfBirthEndFilter,
         'organization': organizationFilter,
         'job': jobFilter,
-        'relation': relationFilter,
-        'showSpecificNamecards': showSpecificNamecards
+        'relation': relationFilter
+            //'showSpecificNamecards': showSpecificNamecards
             .toString(), // Add filter for specific namecards
       };
+
+      if (isLoggedIn && showSpecificNamecards) {
+        queryParams['user'] = userId.toString();
+      }
+
       final uri = Uri.http('localhost:3000', '/filter', queryParams);
       final response = await http.get(uri);
       if (response.statusCode == 200) {
@@ -255,10 +274,10 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
+        title: Text('Address Book'),
       ),
       body: Column(
         children: [
-          // Small bar below the title bar
           // Small bar below the title bar
           Container(
             padding: const EdgeInsets.symmetric(
@@ -267,15 +286,17 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 // Sliding switch
                 Text('User:'),
-                Switch(
-                  value: showSpecificNamecards,
-                  onChanged: (value) {
-                    setState(() {
-                      showSpecificNamecards = value;
-                    });
-                    _fetchContacts(); // Refetch contacts when switch changes
-                  },
-                ),
+                isLoggedIn
+                    ? Switch(
+                        value: showSpecificNamecards,
+                        onChanged: (value) {
+                          setState(() {
+                            showSpecificNamecards = value;
+                          });
+                          _fetchContacts(); // Refetch contacts when switch changes
+                        },
+                      )
+                    : const SizedBox(), // Placeholder for disabled switch when not logged in
 
                 // Sign-in/Login button
                 Spacer(),
