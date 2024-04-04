@@ -35,6 +35,8 @@ class _AddContactState extends State<AddContact> {
   final _relationshipTypeController = TextEditingController();
   final _tagsController = TextEditingController();
   final _notesController = TextEditingController();
+  bool _viewAll = false;
+  String _sharedWith = '';
   DateTime? _selectedDate;
 
   //date picker
@@ -417,14 +419,37 @@ class _AddContactState extends State<AddContact> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _notesController,
-                  decoration: const InputDecoration(
-                    labelText: 'Notes',
-                    fillColor: Colors.white,
-                    filled: true,
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _notesController,
+                        decoration: const InputDecoration(
+                          labelText: 'Notes',
+                          fillColor: Colors.white,
+                          filled: true,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () {
+                          _showShareDialog(context);
+                        },
+                        child: InputDecorator(
+                          decoration: const InputDecoration(
+                            labelText: 'Share with',
+                            fillColor: Colors.white,
+                            filled: true,
+                          ),
+                          child: Text(_sharedWith.isNotEmpty
+                              ? _sharedWith
+                              : 'Select users'),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -456,6 +481,106 @@ class _AddContactState extends State<AddContact> {
     );
   }
 
+  void _showShareDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Share with'),
+          content: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Text('View All'),
+                      Checkbox(
+                        value: _viewAll,
+                        onChanged: (bool? value) {
+                          setState(() {
+                            _viewAll = value!;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  FutureBuilder<List<String>>(
+                    future:
+                        _fetchUsers(), // Implement _fetchUsers() to fetch user name cards
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator(); // Loading indicator while fetching data
+                      } else if (snapshot.hasError) {
+                        return Text('Error: ${snapshot.error}');
+                      } else {
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Add a checkbox for "Select All" if needed
+                            ...snapshot.data!.map((user) => CheckboxListTile(
+                                  title: Text(user),
+                                  value: _viewAll || _sharedWith.contains(user),
+                                  onChanged: (bool? selected) {
+                                    setState(() {
+                                      if (selected!) {
+                                        _sharedWith += user + ', ';
+                                      } else {
+                                        _sharedWith = _sharedWith.replaceAll(
+                                            user + ', ', '');
+                                      }
+                                    });
+                                  },
+                                )),
+                          ],
+                        );
+                      }
+                    },
+                  ),
+                ],
+              );
+            },
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<List<String>> _fetchUsers() async {
+    try {
+      // Make a GET request to your API endpoint to fetch user data
+      final response = await http.get(Uri.parse('http://example.com/users'));
+
+      if (response.statusCode == 200) {
+        // If the request is successful, parse the response body
+        final List<dynamic> data = json.decode(response.body);
+
+        // Extract user names from the response data
+        List<String> userNames = [];
+        for (var user in data) {
+          userNames.add(user['name']);
+        }
+
+        return userNames;
+      } else {
+        // If the server returns an error response, throw an exception
+        throw Exception('Failed to load users');
+      }
+    } catch (error) {
+      // Catch any errors that occur during the request
+      print('Error fetching users: $error');
+      throw Exception('Failed to load users');
+    }
+  }
+
   void _submitForm() {
     // Get the values from the form
     final name = _nameController.text;
@@ -483,6 +608,8 @@ class _AddContactState extends State<AddContact> {
     final relationshipType = _relationshipTypeController.text;
     final tags = _tagsController.text;
     final notes = _notesController.text;
+    bool viewAll = _viewAll;
+    String sharedWith = _sharedWith;
 
     // Create the request body
     final body = jsonEncode({
@@ -510,6 +637,8 @@ class _AddContactState extends State<AddContact> {
       'relationship_type': relationshipType,
       'tags': tags,
       'notes': notes,
+      'viewall': viewAll,
+      'sharewith': sharedWith
     });
 
     // Send the request
@@ -558,6 +687,8 @@ class _AddContactState extends State<AddContact> {
     final relationshipType = _relationshipTypeController.text;
     final tags = _tagsController.text;
     final notes = _notesController.text;
+    bool viewAll = _viewAll;
+    String sharedWith = _sharedWith;
 
     // Create the request body
     final body = jsonEncode({
@@ -585,6 +716,8 @@ class _AddContactState extends State<AddContact> {
       'relationship_type': relationshipType,
       'tags': tags,
       'notes': notes,
+      'viewall': viewAll,
+      'sharewith': sharedWith
     });
 
     // Send the request
