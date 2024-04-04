@@ -5,22 +5,23 @@ const pool = require('./mysqlConnection'); // Adjust the path as needed
 function createTables() {
 
   // Function to create the user table
-const createUserTable = () => {
-  pool.query(
-    `CREATE TABLE IF NOT EXISTS user (
-      userid INT AUTO_INCREMENT PRIMARY KEY,
-      username VARCHAR(100) NOT NULL,
-      password VARCHAR(100) NOT NULL
-    )`,
-    (error, results, fields) => {
-      if (error) {
-        console.error("Error creating user table:", error);
-      } else {
-        console.log("User table created or already exists");
+  const createUserTable = () => {
+    pool.query(
+      `CREATE TABLE IF NOT EXISTS user (
+        userid INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(100) NOT NULL UNIQUE,
+        password VARCHAR(100) NOT NULL
+      )`,
+      (error, results, fields) => {
+        if (error) {
+          console.error("Error creating user table:", error);
+        } else {
+          console.log("User table created or already exists");
+        }
       }
-    }
-  );
-};
+    );
+  };
+  
 
     // Create contacts table
 const createContactsTable = () => {

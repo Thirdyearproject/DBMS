@@ -128,6 +128,20 @@ app.post('/login', (req, res) => {
   });
 });
 
+// Define a route to get all usernames
+app.get('/users', (req, res) => {
+  // Query the database to retrieve all usernames
+  pool.query('SELECT username FROM user', (error, results, fields) => {
+    if (error) {
+      console.error("Error retrieving usernames:", error);
+      res.status(500).json({ error: 'Internal server error' });
+    } else {
+      // Extract usernames from the query results
+      const usernames = results.map(row => row.username);
+      res.json({ usernames });
+    }
+  });
+});
 
 app.post("/contacts", (req, res) => {
   const {
