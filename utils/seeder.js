@@ -271,6 +271,7 @@ const seedDatabase = () => {
   // Loop through sample data and insert into database
   sampleData.forEach((data) => {
     const {
+      userid,
       name,
       locality,
       city,
@@ -278,8 +279,16 @@ const seedDatabase = () => {
       pin_code,
       phone_number1,
       phone_type1,
+      phone_number2,
+      phone_type2,
+      phone_number3,
+      phone_type3,
       email_address1,
       email_type1,
+      email_address2,
+      email_type2,
+      email_address3,
+      email_type3,
       organization,
       job_title,
       date_of_birth,
@@ -287,256 +296,176 @@ const seedDatabase = () => {
       notes,
       tags,
       relationship_type,
-    } = data;
-    // Insert contact
-    pool.query(
-      "INSERT INTO contacts (name, organization, job_title, date_of_birth, website_url, notes, tags) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      [name, organization, job_title, date_of_birth, website_url, notes, tags],
-      (error, contactResult) => {
-        if (error) {
-          console.error("Error inserting contact:", error);
-          return;
+      visible_to_all,
+      share_userid1,
+      share_userid2,
+      share_userid3
+    }=data;
+  
+    pool.getConnection((err, connection) => {
+      if (err) {
+        console.error("Error getting connection:", err);
+        return 
+      }
+  
+      // Begin transaction
+      connection.beginTransaction((err) => {
+        if (err) {
+          console.error("Error beginning transaction:", err);
+          connection.release();
+          return 
         }
-        // Insert address
-        pool.query(
-          "INSERT INTO addresses (Address_contact_id,locality, city, state, pin_code) VALUES (?,?, ?, ?, ?)",
-          [contactResult.insertId, locality, city, state, pin_code],
-          (error, addressResult) => {
+  
+        // Insert contact
+        connection.query(
+          "INSERT INTO contacts (userid, name, organization, job_title, date_of_birth, website_url, notes, tags, visible_to_all) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          [userid, name, organization, job_title, date_of_birth, website_url, notes, tags, visible_to_all],
+          (error, contactResult) => {
             if (error) {
-              console.error("Error inserting address:", error);
-              return;
+              console.error("Error inserting contact:", error);
+              return connection.rollback(() => {
+                connection.release();
+                
+              });
             }
-
-            // Insert phone number
-            pool.query(
-              "INSERT INTO phone_numbers (phone_contact_id,phone_number1, phone_type1) VALUES (?,?, ?)",
-              [contactResult.insertId, phone_number1, phone_type1],
-              (error, phoneResult) => {
+  
+            // Insert address
+            connection.query(
+              "INSERT INTO addresses (Address_contact_id, locality, city, state, pin_code) VALUES (?,?,?,?,?)",
+              [contactResult.insertId, locality, city, state, pin_code],
+              (error, addressResult) => {
                 if (error) {
-                  console.error("Error inserting phone number:", error);
-                  return;
+                  console.error("Error inserting address:", error);
+                  return connection.rollback(() => {
+                    connection.release();
+                    
+                  });
                 }
-
-                // Insert email
-                pool.query(
-                  "INSERT INTO emails (email_contact_id,email_address1, email_type1) VALUES (?,?, ?)",
-                  [contactResult.insertId, email_address1, email_type1],
-                  (error, emailResult) => {
+  
+                // Insert phone number
+                connection.query(
+                  "INSERT INTO phone_numbers (phone_contact_id, phone_number1, phone_type1, phone_number2, phone_type2, phone_number3, phone_type3) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                  [
+                    contactResult.insertId,
+                    phone_number1,
+                    phone_type1,
+                    phone_number2,
+                    phone_type2,
+                    phone_number3,
+                    phone_type3,
+                  ],
+                  (error, phoneResult) => {
                     if (error) {
-                      console.error("Error inserting email:", error);
-                      return;
+                      console.error("Error inserting phone number:", error);
+                      return connection.rollback(() => {
+                        connection.release();
+                        
+                      });
                     }
-                    // Insert relationship
-                    if (relationship_type) {
-                      pool.query(
-                        "INSERT INTO relationships (person_id, relationship_type) VALUES (?, ?)",
-                        [contactResult.insertId, relationship_type],
-                        (error, relationshipResult) => {
-                          if (error) {
-                            console.error(
-                              "Error inserting relationship:",
-                              error
-                            );
-                            return;
-                          }
-                          console.log(
-                            `Contact added with ID: ${contactResult.insertId}`
+  
+                    // Insert email
+                    connection.query(
+                      "INSERT INTO emails (email_contact_id, email_address1, email_type1, email_address2, email_type2, email_address3, email_type3) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                      [
+                        contactResult.insertId,
+                        email_address1,
+                        email_type1,
+                        email_address2,
+                        email_type2,
+                        email_address3,
+                        email_type3,
+                      ],
+                      (error, emailResult) => {
+                        if (error) {
+                          console.error("Error inserting email:", error);
+                          return connection.rollback(() => {
+                            connection.release();
+                            
+                          });
+                        }
+  
+                        // Insert relationship
+                        if (relationship_type) {
+                          connection.query(
+                            "INSERT INTO relationships (person_id, relationship_type) VALUES (?, ?)",
+                            [contactResult.insertId, relationship_type],
+                            (error, relationshipResult) => {
+                              if (error) {
+                                console.error("Error inserting relationship:", error);
+                                return connection.rollback(() => {
+                                  connection.release();
+                                });
+                              }
+                              
+                              // Insert into share table
+                              connection.query(
+                                "INSERT INTO share (contactid, share_userid1, share_userid2, share_userid3) VALUES (?, ?, ?, ?)",
+                                [contactResult.insertId, share_userid1, share_userid2, share_userid3],
+                                (error, shareResult) => {
+                                  if (error) {
+                                    console.error("Error inserting share:", error);
+                                    return connection.rollback(() => {
+                                      connection.release();
+                                      
+                                    });
+                                  }
+                                  // Commit transaction if everything is successful
+                                  connection.commit((err) => {
+                                    if (err) {
+                                      console.error("Error committing transaction:", err);
+                                      return connection.rollback(() => {
+                                        connection.release();
+                                        
+                                      });
+                                    }
+                                    connection.release();
+                                  });
+                                }
+                              );
+                            }
+                          );
+                        } else {
+                          // Insert into share table
+                          connection.query(
+                            "INSERT INTO share (contactid, share_userid1, share_userid2, share_userid3) VALUES (?, ?, ?, ?)",
+                            [contactResult.insertId, share_userid1, share_userid2, share_userid3],
+                            (error, shareResult) => {
+                              if (error) {
+                                console.error("Error inserting share:", error);
+                                return connection.rollback(() => {
+                                  connection.release();
+                                  
+                                });
+                              }
+                              // Commit transaction if everything is successful
+                              connection.commit((err) => {
+                                if (err) {
+                                  console.error("Error committing transaction:", err);
+                                  return connection.rollback(() => {
+                                    connection.release();
+                                    
+                                  });
+                                }
+                                connection.release();
+
+                              });
+                            }
                           );
                         }
-                      );
-                    } else {
-                      console.log(`data inserted`);
-                      console.log(
-                        `Contact added with ID: ${contactResult.insertId}`
-                      );
-                    }
+                      }
+                    );
                   }
                 );
               }
             );
           }
         );
-      }
-    );
-  });
-};
-const deleteContactsTable = () => {
-  pool.query(`drop table contacts`, (error, results, fields) => {
-    if (error) {
-      console.error("Error creating contacts table:", error);
-    } else {
-      console.log("Contacts table created or already exists");
-    }
-  });
-};
-// Create addresses table
-const deleteAddressesTable = () => {
-  pool.query(`drop table addresses`, (error, results, fields) => {
-    if (error) {
-      console.error("Error creating addresses table:", error);
-    } else {
-      console.log("Addresses table created or already exists");
-    }
-  });
-};
+      });
+    });})
+    console.log("Database seeding completed.");
+  };
 
-// Create phone_numbers table
-const deletePhoneNumbersTable = () => {
-  pool.query(`drop table phone_numbers`, (error, results, fields) => {
-    if (error) {
-      console.error("Error creating phone_numbers table:", error);
-    } else {
-      console.log("Phone Numbers table created or already exists");
-    }
-  });
-};
-
-// Create emails table
-const deleteEmailsTable = () => {
-  pool.query(`drop table emails`, (error, results, fields) => {
-    if (error) {
-      console.error("Error creating emails table:", error);
-    } else {
-      console.log("Emails table created or already exists");
-    }
-  });
-};
-
-// Create relationships table
-const deleteRelationshipsTable = () => {
-  pool.query(`drop table relationships`, (error, results, fields) => {
-    if (error) {
-      console.error("Error creating relationships table:", error);
-    } else {
-      console.log("Relationships table created or already exists");
-    }
-  });
-};
-
-const createContactsTable = () => {
-  pool.query(
-    `CREATE TABLE IF NOT EXISTS contacts (
-        contact_id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
-        organization VARCHAR(100),
-        job_title VARCHAR(100),
-        date_of_birth DATE,
-        website_url VARCHAR(255),
-        notes TEXT,
-        tags VARCHAR(255)
-    )`,
-    (error, results, fields) => {
-      if (error) {
-        console.error("Error creating contacts table:", error);
-      } else {
-        console.log("Contacts table created or already exists");
-      }
-    }
-  );
-};
-// Create addresses table
-const createAddressesTable = () => {
-  pool.query(
-    `CREATE TABLE IF NOT EXISTS addresses (
-        address_id INT AUTO_INCREMENT PRIMARY KEY,
-        Address_contact_id INT,
-        locality VARCHAR(100),
-        city VARCHAR(100),
-        state VARCHAR(100),
-        pin_code VARCHAR(20),     
-        FOREIGN KEY (Address_contact_id) REFERENCES contacts(contact_id)
-    )`,
-    (error, results, fields) => {
-      if (error) {
-        console.error("Error creating addresses table:", error);
-      } else {
-        console.log("Addresses table created or already exists");
-      }
-    }
-  );
-};
-
-// Create phone_numbers table
-const createPhoneNumbersTable = () => {
-  pool.query(
-    `CREATE TABLE IF NOT EXISTS phone_numbers (
-        phone_number_id INT AUTO_INCREMENT PRIMARY KEY,
-        phone_contact_id INT,
-        phone_number1 VARCHAR(15)  ,
-        type1 VARCHAR(50),
-        phone_number2 VARCHAR(15)  ,
-        type2 VARCHAR(50),
-        phone_number3 VARCHAR(15)  ,
-        type3 VARCHAR(50),
-        FOREIGN KEY (phone_contact_id) REFERENCES contacts(contact_id)
-    )`,
-    (error, results, fields) => {
-      if (error) {
-        console.error("Error creating phone_numbers table:", error);
-      } else {
-        console.log("Phone Numbers table created or already exists");
-      }
-    }
-  );
-};
-
-// Create emails table
-const createEmailsTable = () => {
-  pool.query(
-    `CREATE TABLE IF NOT EXISTS emails (
-        email_id INT AUTO_INCREMENT PRIMARY KEY,
-        email_contact_id INT,
-        email_address1 VARCHAR(100)  ,
-        type1 VARCHAR(50),
-        email_address2 VARCHAR(100)  ,
-        type2 VARCHAR(50),
-        email_address3 VARCHAR(100)  ,
-        type3 VARCHAR(50),
-        FOREIGN KEY (email_contact_id) REFERENCES contacts(contact_id)
-    )`,
-    (error, results, fields) => {
-      if (error) {
-        console.error("Error creating emails table:", error);
-      } else {
-        console.log("Emails table created or already exists");
-      }
-    }
-  );
-};
-
-// Create relationships table
-const createRelationshipsTable = () => {
-  pool.query(
-    `CREATE TABLE IF NOT EXISTS relationships (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        person_id INT,
-        relationship_type VARCHAR(100),
-        FOREIGN KEY (person_id) REFERENCES contacts(contact_id)
-    )`,
-    (error, results, fields) => {
-      if (error) {
-        console.error("Error creating relationships table:", error);
-      } else {
-        console.log("Relationships table created or already exists");
-      }
-    }
-  );
-};
-// Initialize tables
-const initializeTables = () => {
-  createContactsTable();
-  createRelationshipsTable();
-  createAddressesTable();
-  createPhoneNumbersTable();
-  createEmailsTable();
-};
-const deleteTables = () => {
-  deleteContactsTable();
-  deleteRelationshipsTable();
-  deleteAddressesTable();
-  deletePhoneNumbersTable();
-  deleteEmailsTable();
-};
+ 
 
 //deleteTables();
 //initializeTables();

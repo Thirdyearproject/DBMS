@@ -35,7 +35,7 @@ const createContactsTable = () => {
         notes TEXT,
         tags VARCHAR(255),
         userid INT,
-        visible_to_all BOOLEAN DEFAULT 1
+        visible_to_all BOOLEAN 
     );`,
       (error, results, fields) => {
         if (error) {
