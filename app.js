@@ -66,6 +66,40 @@ const insertContactWithTransaction = (contactData) => {
   });
 };
 
+// Signup Route
+app.post('/signup', (req, res) => {
+  const { username, password } = req.body;
+
+  pool.query('INSERT INTO user (username, password) VALUES (?, ?)', [username, password], (error, results) => {
+    if (error) {
+      console.error('Error signing up:', error);
+      return res.status(500).json({ error: 'Error signing up' });
+    }
+
+    res.status(201).json({ message: 'Signup successful' });
+  });
+});
+
+// Login Route return user id
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+
+  pool.query('SELECT userid FROM user WHERE username = ? AND password = ?', [username, password], (error, results) => {
+    if (error) {
+      console.error('Error logging in:', error);
+      return res.status(500).json({ error: 'Error logging in' });
+    }
+
+    if (results.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const userId = results[0].id; // Assuming id is the column name for user ID
+    res.status(200).json({ message: 'Login successful', userId: userId });
+  });
+});
+
+
 app.post("/contacts", (req, res) => {
   const {
     userid,
