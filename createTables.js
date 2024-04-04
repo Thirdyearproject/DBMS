@@ -3,19 +3,40 @@ const pool = require('./mysqlConnection'); // Adjust the path as needed
 
 // Function to create tables
 function createTables() {
+
+  // Function to create the user table
+const createUserTable = () => {
+  pool.query(
+    `CREATE TABLE IF NOT EXISTS user (
+      userid INT AUTO_INCREMENT PRIMARY KEY,
+      username VARCHAR(100) NOT NULL,
+      password VARCHAR(100) NOT NULL
+    )`,
+    (error, results, fields) => {
+      if (error) {
+        console.error("Error creating user table:", error);
+      } else {
+        console.log("User table created or already exists");
+      }
+    }
+  );
+};
+
     // Create contacts table
 const createContactsTable = () => {
     pool.query(
       `CREATE TABLE IF NOT EXISTS contacts (
-          contact_id INT AUTO_INCREMENT PRIMARY KEY,
-          name VARCHAR(100) NOT NULL,
-          organization VARCHAR(100),
-          job_title VARCHAR(100),
-          date_of_birth DATE,
-          website_url VARCHAR(255),
-          notes TEXT,
-          tags VARCHAR(255)
-      )`,
+        contact_id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        organization VARCHAR(100),
+        job_title VARCHAR(100),
+        date_of_birth DATE,
+        website_url VARCHAR(255),
+        notes TEXT,
+        tags VARCHAR(255),
+        userid INT,
+        visible_to_all BOOLEAN 
+    );`,
       (error, results, fields) => {
         if (error) {
           console.error("Error creating contacts table:", error);
@@ -25,6 +46,7 @@ const createContactsTable = () => {
       }
     );
   };
+
   // Create addresses table
   const createAddressesTable = () => {
     pool.query(
@@ -47,6 +69,26 @@ const createContactsTable = () => {
     );
   };
   
+  const createShareTable = () => {
+    pool.query(
+      `CREATE TABLE IF NOT EXISTS share (
+        contactid INT,
+        share_userid1 INT,
+        share_userid2 INT,
+        share_userid3 INT,
+        PRIMARY KEY (contactid),
+        FOREIGN KEY (contactid) REFERENCES contacts(contact_id)
+      )`,
+      (error, results, fields) => {
+        if (error) {
+          console.error("Error creating share table:", error);
+        } else {
+          console.log("Share table created or already exists");
+        }
+      }
+    );
+  };
+
   // Create phone_numbers table
   const createPhoneNumbersTable = () => {
     pool.query(
@@ -117,6 +159,8 @@ const createContactsTable = () => {
   // Initialize tables
   const initializeTables = () => {
     createContactsTable();
+    createUserTable();
+    createShareTable();
     createRelationshipsTable();
     createAddressesTable();
     createPhoneNumbersTable();
