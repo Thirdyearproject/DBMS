@@ -3,6 +3,8 @@ require("dotenv").config(); // Load environment variables
 const express = require("express");
 const bodyParser = require("body-parser");
 const mysql = require("mysql2");
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -70,21 +72,31 @@ const insertContactWithTransaction = (contactData) => {
 app.post('/signup', (req, res) => {
   const { username, password } = req.body;
 
-  pool.query('INSERT INTO user (username, password) VALUES (?, ?)', [username, password], (error, results) => {
+  // Hash the password
+  bcrypt.hash(password, 10, (error, hashedPassword) => {
     if (error) {
-      console.error('Error signing up:', error);
+      console.error('Error hashing password:', error);
       return res.status(500).json({ error: 'Error signing up' });
     }
 
-    res.status(201).json({ message: 'Signup successful' });
+    // Insert user into the database with hashed password
+    pool.query('INSERT INTO user (username, password) VALUES (?, ?)', [username, hashedPassword], (error, results) => {
+      if (error) {
+        console.error('Error signing up:', error);
+        return res.status(500).json({ error: 'Error signing up' });
+      }
+
+      res.status(201).json({ message: 'Signup successful' });
+    });
   });
 });
 
-// Login Route return user id
+// Login Route
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
 
-  pool.query('SELECT userid FROM user WHERE username = ? AND password = ?', [username, password], (error, results) => {
+  // Retrieve user from the database
+  pool.query('SELECT userid, password FROM user WHERE username = ?', [username], (error, results) => {
     if (error) {
       console.error('Error logging in:', error);
       return res.status(500).json({ error: 'Error logging in' });
@@ -94,8 +106,25 @@ app.post('/login', (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const userId = results[0].id; // Assuming id is the column name for user ID
-    res.status(200).json({ message: 'Login successful', userId: userId });
+    const user = results[0];
+
+    // Compare hashed passwords
+    bcrypt.compare(password, user.password, (bcryptError, isMatch) => {
+      if (bcryptError) {
+        console.error('Error comparing passwords:', bcryptError);
+        return res.status(500).json({ error: 'Error logging in' });
+      }
+
+      if (!isMatch) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+
+      // Generate JWT token
+      const token = jwt.sign({ userId: user.id }, 'your_secret_key', { expiresIn: '1h' });
+
+      // Return token and success message
+      res.status(200).json({ message: 'Login successful', userId: user.userid, token: token });
+    });
   });
 });
 
