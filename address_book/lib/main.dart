@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:window_manager/window_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Import the package
-
 import 'add_contact.dart';
 import 'update_contact.dart';
 import 'about_contact.dart';
@@ -11,7 +10,6 @@ import 'about_contact.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
-
   WindowOptions windowOptions = WindowOptions(
     size: Size(400, 600),
     center: true,
@@ -19,12 +17,10 @@ void main() async {
     skipTaskbar: false,
     //titleBarStyle: TitleBarStyle.hidden,
   );
-
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
   });
-
   runApp(const MyApp());
 }
 
@@ -75,7 +71,6 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       isLoading = true;
     });
-
     final response = await http.post(
       Uri.parse('http://localhost:3000/login'),
       body: jsonEncode({
@@ -84,7 +79,6 @@ class _LoginScreenState extends State<LoginScreen> {
       }),
       headers: {'Content-Type': 'application/json'},
     );
-
     if (response.statusCode == 200) {
       final userId = jsonDecode(response.body)['userId'];
       final prefs = await SharedPreferences.getInstance();
@@ -94,7 +88,6 @@ class _LoginScreenState extends State<LoginScreen> {
     } else {
       print('Login failed');
     }
-
     setState(() {
       isLoading = false;
     });
@@ -104,7 +97,6 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       isLoading = true;
     });
-
     final response = await http.post(
       Uri.parse('http://localhost:3000/signup'),
       body: jsonEncode({
@@ -113,7 +105,6 @@ class _LoginScreenState extends State<LoginScreen> {
       }),
       headers: {'Content-Type': 'application/json'},
     );
-
     if (response.statusCode == 200) {
       userId = jsonDecode(response.body)['userId']; // Assign userId here
       final prefs = await SharedPreferences.getInstance();
@@ -123,7 +114,6 @@ class _LoginScreenState extends State<LoginScreen> {
     } else {
       print('Sign-up failed');
     }
-
     setState(() {
       isLoading = false;
     });
@@ -172,7 +162,6 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Contact> contacts = [];
   String searchQuery = '';
   bool isLoading = false;
-
   int? userId;
 
   // Filter fields
@@ -215,7 +204,6 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       isLoading = true;
     });
-
     if (areFiltersApplied()) {
       final queryParams = {
         'searchQuery': searchQuery,
@@ -228,11 +216,9 @@ class _MyHomePageState extends State<MyHomePage> {
             //'showSpecificNamecards': showSpecificNamecards
             .toString(), // Add filter for specific namecards
       };
-
       if (isLoggedIn && showSpecificNamecards) {
         queryParams['user'] = userId.toString();
       }
-
       final uri = Uri.http('localhost:3000', '/filter', queryParams);
       final response = await http.get(uri);
       if (response.statusCode == 200) {
@@ -253,7 +239,6 @@ class _MyHomePageState extends State<MyHomePage> {
         throw Exception('Failed to load contacts');
       }
     }
-
     setState(() {
       isLoading = false;
     });
@@ -297,7 +282,6 @@ class _MyHomePageState extends State<MyHomePage> {
                         },
                       )
                     : const SizedBox(), // Placeholder for disabled switch when not logged in
-
                 // Sign-in/Login button
                 Spacer(),
                 ElevatedButton(

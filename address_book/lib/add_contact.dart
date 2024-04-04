@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 class AddContact extends StatefulWidget {
@@ -37,7 +38,21 @@ class _AddContactState extends State<AddContact> {
   final _notesController = TextEditingController();
   bool _viewAll = false;
   String _sharedWith = '';
+  int? userId;
   DateTime? _selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserId(); // Load userId on initialization
+  }
+
+  Future<void> _loadUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userId = prefs.getInt('userId');
+    });
+  }
 
   //date picker
   Future<void> _selectDate(BuildContext context) async {
@@ -557,7 +572,7 @@ class _AddContactState extends State<AddContact> {
   Future<List<String>> _fetchUsers() async {
     try {
       // Make a GET request to your API endpoint to fetch user data
-      final response = await http.get(Uri.parse('http://example.com/users'));
+      final response = await http.get(Uri.parse('http://localhost:3000/users'));
 
       if (response.statusCode == 200) {
         // If the request is successful, parse the response body
@@ -618,6 +633,7 @@ class _AddContactState extends State<AddContact> {
       'city': city,
       'state': state,
       'pin_code': pinCode,
+      'user': userId,
       'phone_number1': phoneNumber1,
       'phone_type1': phoneType1,
       'phone_number2': phoneNumber2,
@@ -697,6 +713,7 @@ class _AddContactState extends State<AddContact> {
       'city': city,
       'state': state,
       'pin_code': pinCode,
+      'user': userId,
       'phone_number1': phoneNumber1,
       'phone_type1': phoneType1,
       'phone_number2': phoneNumber2,
