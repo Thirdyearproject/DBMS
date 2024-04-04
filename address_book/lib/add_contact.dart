@@ -653,7 +653,7 @@ class _AddContactState extends State<AddContact> {
       'relationship_type': relationshipType,
       'tags': tags,
       'notes': notes,
-      'viewall': viewAll,
+      'visible_to_all': viewAll,
       'sharewith': sharedWith
     });
 
@@ -733,7 +733,7 @@ class _AddContactState extends State<AddContact> {
       'relationship_type': relationshipType,
       'tags': tags,
       'notes': notes,
-      'viewall': viewAll,
+      'visible_to_all': viewAll,
       'sharewith': sharedWith
     });
 
