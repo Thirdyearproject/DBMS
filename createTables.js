@@ -154,7 +154,25 @@ const createContactsTable = () => {
       }
     );
   };
-  
+
+  // Function to create the UserShares table
+const createUserSharesTable = () => {
+  pool.query(
+    `CREATE TABLE IF NOT EXISTS UserShares (
+      id SERIAL PRIMARY KEY,
+      current_user_id INT NOT NULL,
+      shared_user_id INT NOT NULL,
+      CONSTRAINT unique_user_pair UNIQUE (current_user_id, shared_user_id)
+    )`,
+    (error, results, fields) => {
+      if (error) {
+        console.error("Error creating UserShares table:", error);
+      } else {
+        console.log("UserShares table created or already exists");
+      }
+    }
+  );
+};  
   // Initialize tables
   const initializeTables = () => {
     createContactsTable();
@@ -164,6 +182,7 @@ const createContactsTable = () => {
     createAddressesTable();
     createPhoneNumbersTable();
     createEmailsTable();
+    createUserSharesTable();
   };
   initializeTables();
   
