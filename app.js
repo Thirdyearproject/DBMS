@@ -635,6 +635,144 @@ app.delete("/contacts/:contactId", (req, res) => {
   );
 });
 
+//add user share permission 
+app.post("/userShares", (req, res) => {
+  const {
+    current_user_id,
+    shared_user_ids
+  } = req.body;
+
+  pool.getConnection((err, connection) => {
+    if (err) {
+      console.error("Error getting connection:", err);
+      return res.status(500).json({ error: "Error sharing users." });
+    }
+
+    // Begin transaction
+    connection.beginTransaction((err) => {
+      if (err) {
+        console.error("Error beginning transaction:", err);
+        connection.release();
+        return res.status(500).json({ error: "Error sharing users." });
+      }
+
+      // Insert share for each shared user
+      const shareInsertPromises = shared_user_ids.map(sharedUserId => {
+        return new Promise((resolve, reject) => {
+          connection.query(
+            "INSERT INTO UserShares (current_user_id, shared_user_id) VALUES (?, ?)",
+            [current_user_id, sharedUserId],
+            (error, shareResult) => {
+              if (error) {
+                console.error("Error sharing user:", error);
+                reject(error);
+              } else {
+                resolve();
+              }
+            }
+          );
+        });
+      });
+
+      // Execute all share insertions
+      Promise.all(shareInsertPromises)
+        .then(() => {
+          // Commit transaction if everything is successful
+          connection.commit((err) => {
+            if (err) {
+              console.error("Error committing transaction:", err);
+              return connection.rollback(() => {
+                connection.release();
+                res.status(500).json({ error: "Error sharing users." });
+              });
+            }
+            connection.release();
+            res.status(201).json({
+              message: "Users shared successfully",
+            });
+          });
+        })
+        .catch(error => {
+          console.error("Error sharing users:", error);
+          return connection.rollback(() => {
+            connection.release();
+            res.status(500).json({ error: "Error sharing users." });
+          });
+        });
+    });
+  });
+});
+
+//update user share permission 
+app.put("/userShares/:id", (req, res) => {
+  const current_user_id = req.params.id;
+  const { shared_user_ids } = req.body;
+
+  // Check if shared_user_ids is provided and not empty
+  if (!shared_user_ids || shared_user_ids.length === 0) {
+    return res.status(400).json({ error: "shared_user_ids must be a non-empty array." });
+  }
+
+  pool.getConnection((err, connection) => {
+    if (err) {
+      console.error("Error getting connection:", err);
+      return res.status(500).json({ error: "Database connection error." });
+    }
+
+    connection.beginTransaction((err) => {
+      if (err) {
+        console.error("Error beginning transaction:", err);
+        connection.release();
+        return res.status(500).json({ error: "Transaction error." });
+      }
+
+      connection.query(
+        "DELETE FROM UserShares WHERE current_user_id = ?",
+        [current_user_id],
+        (error, deleteResult) => {
+          if (error) {
+            console.error("Error deleting previous entries:", error);
+            return connection.rollback(() => {
+              connection.release();
+              res.status(500).json({ error: "Error deleting previous entries." });
+            });
+          }
+
+          // Insert new entries for each shared_user_id
+          const insertValues = shared_user_ids.map(user_id => [current_user_id, user_id]);
+          connection.query(
+            "INSERT INTO UserShares (current_user_id, shared_user_id) VALUES ?",
+            [insertValues],
+            (error, insertResult) => {
+              if (error) {
+                console.error("Error creating new entries:", error);
+                return connection.rollback(() => {
+                  connection.release();
+                  res.status(500).json({ error: "Error creating new entries." });
+                });
+              }
+
+              connection.commit((err) => {
+                if (err) {
+                  console.error("Error committing transaction:", err);
+                  return connection.rollback(() => {
+                    connection.release();
+                    res.status(500).json({ error: "Error committing transaction." });
+                  });
+                }
+                connection.release();
+                res.status(200).json({
+                  message: `Shared users with IDs ${shared_user_ids.join(', ')} updated successfully for share ID ${current_user_id}`,
+                });
+              });
+            }
+          );
+        }
+      );
+    });
+  });
+});
+
 //get 
 app.get("/contacts", (req, res) => {
   const query = `
