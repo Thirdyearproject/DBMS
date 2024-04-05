@@ -765,8 +765,8 @@ app.get("/contacts/:userId", (req, res) => {
     LEFT JOIN phone_numbers p ON c.contact_id = p.phone_contact_id
     LEFT JOIN emails e ON c.contact_id = e.email_contact_id
     LEFT JOIN relationships r ON c.contact_id = r.person_id
-    LEFT JOIN share s ON c.contact_id = s.contactid
-    WHERE s.share_userid LIKE CONCAT('%', ?, '%');
+    INNER JOIN share s ON c.contact_id = s.contactid
+    WHERE s.share_userid1 = ? OR s.share_userid2 = ? OR s.share_userid3 = ?
   `;
 
   pool.query(query, [userId], (error, results) => {
