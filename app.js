@@ -862,10 +862,9 @@ app.get("/contacts", (req, res) => {
   });
 });
 
-// Get contacts shared with the specified user
+// Get contacts shared for the specified user if have permission
 app.get("/contacts/user/:userId", (req, res) => {
   const userId = req.params.userId;
-
   const query = `
     SELECT c.contact_id, 
            c.userid, 
@@ -904,10 +903,11 @@ app.get("/contacts/user/:userId", (req, res) => {
     LEFT JOIN emails e ON c.contact_id = e.email_contact_id
     LEFT JOIN relationships r ON c.contact_id = r.person_id
     LEFT JOIN share s ON c.contact_id = s.contactid
-    WHERE s.share_userid LIKE CONCAT('%', ?, '%');
+    LEFT JOIN usershares us ON c.userid = us.current_user_id
+    WHERE (c.userid = ? OR s.share_userid = ? OR us.shared_user_id = ?);
   `;
 
-  pool.query(query, [userId], (error, results) => {
+  pool.query(query, [userId, userId, userId], (error, results) => {
     if (error) {
       console.error("Error retrieving shared contacts:", error);
       res.status(500).json({ error: "Internal server error" });
@@ -916,6 +916,7 @@ app.get("/contacts/user/:userId", (req, res) => {
     }
   });
 });
+
 
 
 // Get all emails
