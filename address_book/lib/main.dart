@@ -72,23 +72,31 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       isLoading = true;
     });
-    final response = await http.post(
-      Uri.parse('http://localhost:3000/login'),
-      body: jsonEncode({
-        'username': usernameController.text,
-        'password': passwordController.text,
-      }),
-      headers: {'Content-Type': 'application/json'},
-    );
-    if (response.statusCode == 200) {
-      final userId = jsonDecode(response.body)['userId'];
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt(
-          'userId', userId!); // Store userId in SharedPreferences
-      Navigator.pop(context); // Close the login window
-    } else {
-      print('Login failed');
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:3000/login'),
+        body: jsonEncode({
+          'username': usernameController.text,
+          'password': passwordController.text,
+        }),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final userId = jsonDecode(response.body)['userId'];
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setInt('userId', userId);
+        Navigator.pop(context); // Close the login window
+      } else if (response.statusCode == 401) {
+        print('Invalid credentials');
+      } else {
+        print('Login failed: ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      print('Error during login: $e');
     }
+
     setState(() {
       isLoading = false;
     });
@@ -98,23 +106,30 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       isLoading = true;
     });
-    final response = await http.post(
-      Uri.parse('http://localhost:3000/signup'),
-      body: jsonEncode({
-        'username': usernameController.text,
-        'password': passwordController.text,
-      }),
-      headers: {'Content-Type': 'application/json'},
-    );
-    if (response.statusCode == 200) {
-      userId = jsonDecode(response.body)['userId']; // Assign userId here
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt(
-          'userId', userId!); // Store userId in SharedPreferences
-      await signIn(); // Call signIn after successful signUp
-    } else {
-      print('Sign-up failed');
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:3000/signup'),
+        body: jsonEncode({
+          'username': usernameController.text,
+          'password': passwordController.text,
+        }),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 201) {
+        // Check for status code 201 for successful signup
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('username',
+            usernameController.text); // Store username in SharedPreferences
+        await signIn(); // Call signIn after successful signUp
+      } else {
+        print('Sign-up failed: ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      print('Error during sign-up: $e');
     }
+
     setState(() {
       isLoading = false;
     });
