@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart'; // Import the packa
 import 'add_contact.dart';
 import 'update_contact.dart';
 import 'about_contact.dart';
+import 'prefered_share.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -311,6 +312,16 @@ class _MyHomePageState extends State<MyHomePage> {
                   },
                   child: Text(isLoggedIn ? 'Logout' : 'Sign In'),
                 ),
+                //Setting button
+                IconButton(
+                    icon: Icon(Icons.settings),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => PreferredShare()),
+                      );
+                    })
               ],
             ),
           ),
