@@ -74,10 +74,8 @@ const createContactsTable = () => {
     pool.query(
       `CREATE TABLE IF NOT EXISTS share (
         contactid INT,
-        share_userid1 INT,
-        share_userid2 INT,
-        share_userid3 INT,
-        PRIMARY KEY (contactid),
+        share_userid INT,
+        PRIMARY KEY (contactid, share_userid),
         FOREIGN KEY (contactid) REFERENCES contacts(contact_id)
       )`,
       (error, results, fields) => {

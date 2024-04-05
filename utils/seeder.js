@@ -37,9 +37,7 @@ const seedDatabase = () => {
       tags: "friend, colleague",
       relationship_type: "Friend",
       visible_to_all: true,
-      share_userid1: 2,
-      share_userid2: 3,
-      share_userid3: 4,
+      share_userid: 2,
     },
     {
       userid: 2,
@@ -62,9 +60,7 @@ const seedDatabase = () => {
       tags: "colleague, friend",
       relationship_type: "Colleague",
       visible_to_all: false,
-      share_userid1: 1,
-      share_userid2: 3,
-      share_userid3: 4,
+      share_userid: 1,
     },
     {
       userid: 3,
