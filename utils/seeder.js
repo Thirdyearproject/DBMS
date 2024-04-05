@@ -37,9 +37,7 @@ const seedDatabase = () => {
       tags: "friend, colleague",
       relationship_type: "Friend",
       visible_to_all: true,
-      share_userid1: 2,
-      share_userid2: 3,
-      share_userid3: 4,
+      share_userid: 2,
     },
     {
       userid: 2,
@@ -62,9 +60,7 @@ const seedDatabase = () => {
       tags: "colleague, friend",
       relationship_type: "Colleague",
       visible_to_all: false,
-      share_userid1: 1,
-      share_userid2: 3,
-      share_userid3: 4,
+      share_userid: 1,
     },
     {
       userid: 3,
@@ -87,9 +83,7 @@ const seedDatabase = () => {
       tags: "friend",
       relationship_type: "Friend",
       visible_to_all: true,
-      share_userid1: 1,
-      share_userid2: 2,
-      share_userid3: 4,
+      share_userid: 1,
     },
     {
       userid: 4,
@@ -112,9 +106,7 @@ const seedDatabase = () => {
       tags: "acquaintance",
       relationship_type: "Acquaintance",
       visible_to_all: false,
-      share_userid1: 1,
-      share_userid2: 2,
-      share_userid3: 3,
+      share_userid: 1,
     },
     {
       userid: 5,
@@ -137,9 +129,7 @@ const seedDatabase = () => {
       tags: "friend",
       relationship_type: "Friend",
       visible_to_all: true,
-      share_userid1: 2,
-      share_userid2: 3,
-      share_userid3: 4,
+      share_userid: 2,
     },
     {
       userid: 6,
@@ -162,9 +152,7 @@ const seedDatabase = () => {
       tags: "friend",
       relationship_type: "Friend",
       visible_to_all: false,
-      share_userid1: 1,
-      share_userid2: 2,
-      share_userid3: 3,
+      share_userid: 1,
     },
     {
       userid: 7,
@@ -187,9 +175,7 @@ const seedDatabase = () => {
       tags: "colleague",
       relationship_type: "Colleague",
       visible_to_all: true,
-      share_userid1: 1,
-      share_userid2: 2,
-      share_userid3: 3,
+      share_userid: 1,
     },
     {
       userid: 8,
@@ -212,9 +198,7 @@ const seedDatabase = () => {
       tags: "acquaintance",
       relationship_type: "Acquaintance",
       visible_to_all: false,
-      share_userid1: 1,
-      share_userid2: 2,
-      share_userid3: 4,
+      share_userid: 1,
     },
     {
       userid: 9,
@@ -237,9 +221,7 @@ const seedDatabase = () => {
       tags: "colleague",
       relationship_type: "Colleague",
       visible_to_all: true,
-      share_userid1: 1,
-      share_userid2: 3,
-      share_userid3: 4,
+      share_userid: 1,
     },
     {
       userid: 10,
@@ -262,9 +244,7 @@ const seedDatabase = () => {
       tags: "acquaintance",
       relationship_type: "Acquaintance",
       visible_to_all: false,
-      share_userid1: 2,
-      share_userid2: 3,
-      share_userid3: 4,
+      share_userid: 2,
     },
   ];
 
@@ -297,9 +277,7 @@ const seedDatabase = () => {
       tags,
       relationship_type,
       visible_to_all,
-      share_userid1,
-      share_userid2,
-      share_userid3
+      share_userid,
     }=data;
   
     pool.getConnection((err, connection) => {
@@ -399,8 +377,8 @@ const seedDatabase = () => {
                               
                               // Insert into share table
                               connection.query(
-                                "INSERT INTO share (contactid, share_userid1, share_userid2, share_userid3) VALUES (?, ?, ?, ?)",
-                                [contactResult.insertId, share_userid1, share_userid2, share_userid3],
+                                "INSERT INTO share (contactid, share_userid) VALUES (?, ?)",
+                                [contactResult.insertId, share_userid],
                                 (error, shareResult) => {
                                   if (error) {
                                     console.error("Error inserting share:", error);
@@ -427,8 +405,8 @@ const seedDatabase = () => {
                         } else {
                           // Insert into share table
                           connection.query(
-                            "INSERT INTO share (contactid, share_userid1, share_userid2, share_userid3) VALUES (?, ?, ?, ?)",
-                            [contactResult.insertId, share_userid1, share_userid2, share_userid3],
+                            "INSERT INTO share (contactid, share_userid) VALUES (?, ?)",
+                            [contactResult.insertId, share_userid],
                             (error, shareResult) => {
                               if (error) {
                                 console.error("Error inserting share:", error);

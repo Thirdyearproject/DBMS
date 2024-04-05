@@ -143,6 +143,7 @@ app.get('/users', (req, res) => {
   });
 });
 
+//add 
 app.post("/contacts", (req, res) => {
   const {
     userid,
@@ -171,9 +172,7 @@ app.post("/contacts", (req, res) => {
     tags,
     relationship_type,
     visible_to_all,
-    share_userid1,
-    share_userid2,
-    share_userid3
+    share_userid
   } = req.body;
 
   pool.getConnection((err, connection) => {
@@ -272,18 +271,30 @@ app.post("/contacts", (req, res) => {
                               });
                             }
                             
-                            // Insert into share table
-                            connection.query(
-                              "INSERT INTO share (contactid, share_userid1, share_userid2, share_userid3) VALUES (?, ?, ?, ?)",
-                              [contactResult.insertId, share_userid1, share_userid2, share_userid3],
-                              (error, shareResult) => {
-                                if (error) {
-                                  console.error("Error inserting share:", error);
-                                  return connection.rollback(() => {
-                                    connection.release();
-                                    res.status(500).json({ error: "Error creating contact." });
-                                  });
-                                }
+                            // Split share_userid string into array of user IDs
+                            const shareUserIds = share_userid.split(",").map(Number);
+
+                            // Insert into share table for each share_userid
+                            const shareInsertPromises = shareUserIds.map(userId => {
+                              return new Promise((resolve, reject) => {
+                                connection.query(
+                                  "INSERT INTO share (contactid, share_userid) VALUES (?, ?)",
+                                  [contactResult.insertId, userId],
+                                  (error, shareResult) => {
+                                    if (error) {
+                                      console.error("Error inserting share:", error);
+                                      reject(error);
+                                    } else {
+                                      resolve();
+                                    }
+                                  }
+                                );
+                              });
+                            });
+
+                            // Execute all share insertions
+                            Promise.all(shareInsertPromises)
+                              .then(() => {
                                 // Commit transaction if everything is successful
                                 connection.commit((err) => {
                                   if (err) {
@@ -298,23 +309,41 @@ app.post("/contacts", (req, res) => {
                                     message: `Contact added with ID: ${contactResult.insertId}`,
                                   });
                                 });
-                              }
-                            );
+                              })
+                              .catch(error => {
+                                console.error("Error inserting share:", error);
+                                return connection.rollback(() => {
+                                  connection.release();
+                                  res.status(500).json({ error: "Error creating contact." });
+                                });
+                              });
                           }
                         );
                       } else {
-                        // Insert into share table
-                        connection.query(
-                          "INSERT INTO share (contactid, share_userid1, share_userid2, share_userid3) VALUES (?, ?, ?, ?)",
-                          [contactResult.insertId, share_userid1, share_userid2, share_userid3],
-                          (error, shareResult) => {
-                            if (error) {
-                              console.error("Error inserting share:", error);
-                              return connection.rollback(() => {
-                                connection.release();
-                                res.status(500).json({ error: "Error creating contact." });
-                              });
-                            }
+                        // Split share_userid string into array of user IDs
+                        const shareUserIds = share_userid.split(",").map(Number);
+
+                        // Insert into share table for each share_userid
+                        const shareInsertPromises = shareUserIds.map(userId => {
+                          return new Promise((resolve, reject) => {
+                            connection.query(
+                              "INSERT INTO share (contactid, share_userid) VALUES (?, ?)",
+                              [contactResult.insertId, userId],
+                              (error, shareResult) => {
+                                if (error) {
+                                  console.error("Error inserting share:", error);
+                                  reject(error);
+                                } else {
+                                  resolve();
+                                }
+                              }
+                            );
+                          });
+                        });
+
+                        // Execute all share insertions
+                        Promise.all(shareInsertPromises)
+                          .then(() => {
                             // Commit transaction if everything is successful
                             connection.commit((err) => {
                               if (err) {
@@ -329,8 +358,14 @@ app.post("/contacts", (req, res) => {
                                 message: `Contact added with ID: ${contactResult.insertId}`,
                               });
                             });
-                          }
-                        );
+                          })
+                          .catch(error => {
+                            console.error("Error inserting share:", error);
+                            return connection.rollback(() => {
+                              connection.release();
+                              res.status(500).json({ error: "Error creating contact." });
+                            });
+                          });
                       }
                     }
                   );
@@ -344,7 +379,7 @@ app.post("/contacts", (req, res) => {
   });
 });
 
-
+// update
 app.put("/contacts/:contactId", (req, res) => {
   const contactId = req.params.contactId;
   const {
@@ -372,9 +407,7 @@ app.put("/contacts/:contactId", (req, res) => {
     notes,
     tags,
     relationship_type,
-    share_userid1,
-    share_userid2,
-    share_userid3
+    share_userid
   } = req.body;
 
   // Update contact
@@ -459,41 +492,51 @@ app.put("/contacts/:contactId", (req, res) => {
                             .json({ error: "Error updating relationship." });
                         }
                         
-                        // Update share
-                        pool.query(
-                          "UPDATE share SET share_userid1=?, share_userid2=?, share_userid3=? WHERE contactid=?",
-                          [share_userid1, share_userid2, share_userid3, contactId],
-                          (error, shareResult) => {
-                            if (error) {
-                              console.error("Error updating share:", error);
-                              return res
-                                .status(500)
-                                .json({ error: "Error updating share." });
+                        // Split share_userid string into array of user IDs
+                        const shareUserIds = share_userid.split(',').map(userId => userId.trim());
+                        
+                        // Iterate over each user ID and perform separate update operations
+                        shareUserIds.forEach(userId => {
+                          pool.query(
+                            "UPDATE share SET share_userid=? WHERE contactid=?",
+                            [userId, contactId],
+                            (error, shareResult) => {
+                              if (error) {
+                                console.error("Error updating share:", error);
+                                // Handle the error
+                              }
+                              // Handle success
                             }
-                            res.status(200).json({
-                              message: `Contact with ID ${contactId} updated successfully.`,
-                            });
-                          }
-                        );
-                      }
-                    );
-                  } else {
-                    // Update share
-                    pool.query(
-                      "UPDATE share SET share_userid1=?, share_userid2=?, share_userid3=? WHERE contactid=?",
-                      [share_userid1, share_userid2, share_userid3, contactId],
-                      (error, shareResult) => {
-                        if (error) {
-                          console.error("Error updating share:", error);
-                          return res
-                            .status(500)
-                            .json({ error: "Error updating share." });
-                        }
+                          );
+                        });
+                        
                         res.status(200).json({
                           message: `Contact with ID ${contactId} updated successfully.`,
                         });
                       }
                     );
+                  } else {
+                    // Split share_userid string into array of user IDs
+                    const shareUserIds = share_userid.split(',').map(userId => userId.trim());
+                    
+                    // Iterate over each user ID and perform separate update operations
+                    shareUserIds.forEach(userId => {
+                      pool.query(
+                        "UPDATE share SET share_userid=? WHERE contactid=?",
+                        [userId, contactId],
+                        (error, shareResult) => {
+                          if (error) {
+                            console.error("Error updating share:", error);
+                            // Handle the error
+                          }
+                          // Handle success
+                        }
+                      );
+                    });
+                    
+                    res.status(200).json({
+                      message: `Contact with ID ${contactId} updated successfully.`,
+                    });
                   }
                 }
               );
@@ -505,7 +548,7 @@ app.put("/contacts/:contactId", (req, res) => {
   );
 });
 
-
+//delete
 app.delete("/contacts/:contactId", (req, res) => {
   const contactId = req.params.contactId;
 
@@ -592,18 +635,40 @@ app.delete("/contacts/:contactId", (req, res) => {
   );
 });
 
-
-// Get all contacts visible to all users
+//get 
 app.get("/contacts", (req, res) => {
   const query = `
-      SELECT c.*, 
-      a.*, 
-      p.*, 
-      e.*, 
+    SELECT c.contact_id, 
+      c.userid, 
+      c.name, 
+      c.organization, 
+      c.job_title, 
+      c.date_of_birth, 
+      c.website_url, 
+      c.notes, 
+      c.tags, 
+      c.visible_to_all,
+      a.Address_contact_id,
+      a.locality,
+      a.city,
+      a.state,
+      a.pin_code,
+      p.phone_contact_id,
+      p.phone_number1,
+      p.phone_type1,
+      p.phone_number2,
+      p.phone_type2,
+      p.phone_number3,
+      p.phone_type3,
+      e.email_contact_id,
+      e.email_address1,
+      e.email_type1,
+      e.email_address2,
+      e.email_type2,
+      e.email_address3,
+      e.email_type3,
       r.relationship_type,
-      s.share_userid1,
-      s.share_userid2,
-      s.share_userid3
+      GROUP_CONCAT(s.share_userid) AS share_userids
     FROM contacts c
     LEFT JOIN addresses a ON c.contact_id = a.Address_contact_id
     LEFT JOIN phone_numbers p ON c.contact_id = p.phone_contact_id
@@ -611,39 +676,100 @@ app.get("/contacts", (req, res) => {
     LEFT JOIN relationships r ON c.contact_id = r.person_id
     LEFT JOIN share s ON c.contact_id = s.contactid
     WHERE c.visible_to_all = 1
-
-    `;
+    GROUP BY c.contact_id,
+      c.userid, 
+      c.name, 
+      c.organization, 
+      c.job_title, 
+      c.date_of_birth, 
+      c.website_url, 
+      c.notes, 
+      c.tags, 
+      c.visible_to_all,
+      a.Address_contact_id,
+      a.locality,
+      a.city,
+      a.state,
+      a.pin_code,
+      p.phone_contact_id,
+      p.phone_number1,
+      p.phone_type1,
+      p.phone_number2,
+      p.phone_type2,
+      p.phone_number3,
+      p.phone_type3,
+      e.email_contact_id,
+      e.email_address1,
+      e.email_type1,
+      e.email_address2,
+      e.email_type2,
+      e.email_address3,
+      e.email_type3,
+      r.relationship_type;
+  `;
 
   pool.query(query, (error, results) => {
     if (error) {
       console.error("Error retrieving contacts:", error);
       res.status(500).json({ error: "Internal server error" });
     } else {
-      res.json(results);
+      // Transform the results to parse share_userids as an array
+      const contacts = results.map(contact => ({
+        ...contact,
+        share_userids: contact.share_userids ? contact.share_userids.split(',') : []
+      }));
+      
+      res.json(contacts);
     }
   });
 });
 
-// Get contacts shared with the current user
+// Get contacts shared with the specified user
 app.get("/contacts/:userId", (req, res) => {
   const userId = req.params.userId;
 
   const query = `
-    SELECT c.*, 
-           a.*, 
-           p.*, 
-           e.*, 
-           r.relationship_type 
+    SELECT c.contact_id, 
+           c.userid, 
+           c.name, 
+           c.organization, 
+           c.job_title, 
+           c.date_of_birth, 
+           c.website_url, 
+           c.notes, 
+           c.tags, 
+           c.visible_to_all,
+           a.Address_contact_id,
+           a.locality,
+           a.city,
+           a.state,
+           a.pin_code,
+           p.phone_contact_id,
+           p.phone_number1,
+           p.phone_type1,
+           p.phone_number2,
+           p.phone_type2,
+           p.phone_number3,
+           p.phone_type3,
+           e.email_contact_id,
+           e.email_address1,
+           e.email_type1,
+           e.email_address2,
+           e.email_type2,
+           e.email_address3,
+           e.email_type3,
+           r.relationship_type,
+           s.share_userid
     FROM contacts c
     LEFT JOIN addresses a ON c.contact_id = a.Address_contact_id
     LEFT JOIN phone_numbers p ON c.contact_id = p.phone_contact_id
     LEFT JOIN emails e ON c.contact_id = e.email_contact_id
     LEFT JOIN relationships r ON c.contact_id = r.person_id
-    INNER JOIN share s ON c.contact_id = s.contactid
-    WHERE s.share_userid1 = ? OR s.share_userid2 = ? OR s.share_userid3 = ?
+    LEFT JOIN share s ON c.contact_id = s.contactid
+    WHERE s.share_userid LIKE CONCAT('%', ?, '%');
   `;
 
-  pool.query(query, [userId, userId, userId], (error, results) => {
+  pool.query(query, [userId], (error, results) => {
     if (error) {
       console.error("Error retrieving shared contacts:", error);
       res.status(500).json({ error: "Internal server error" });
@@ -652,6 +778,8 @@ app.get("/contacts/:userId", (req, res) => {
     }
   });
 });
+
+
 
 
 // Get all emails
