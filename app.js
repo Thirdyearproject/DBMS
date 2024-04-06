@@ -671,7 +671,7 @@ app.delete("/contacts/:contactId", (req, res) => {
   );
 });
 
-//add user share permission 
+//add user share permission  with multiple share 
 app.post("/userShares", (req, res) => {
   const {
     current_user_id,
@@ -739,7 +739,7 @@ app.post("/userShares", (req, res) => {
   });
 });
 
-//update user share permission 
+//update user share permission multiple share
 app.put("/userShares/:id", (req, res) => {
   const current_user_id = req.params.id;
   const { shared_user_ids } = req.body;
