@@ -92,6 +92,22 @@ app.get('/users', (req, res) => {
     }
   });
 });
+app.get('/UserShares/:loggedUser', (req, res) => {
+  const loggedUser = req.params.loggedUser;
+
+  // Query the database to retrieve shared user IDs for the logged-in user
+  pool.query('SELECT shared_user_id FROM UserShares WHERE current_user_id = ?', [loggedUser], (error, results, fields) => {
+    if (error) {
+      console.error("Error retrieving shared user data:", error);
+      res.status(500).json({ error: 'Internal server error' });
+    } else {
+      // Extract the shared user IDs from the results
+      const sharedUserIds = results.map(row => row.shared_user_id);
+
+      res.json(sharedUserIds);
+    }
+  });
+});
 app.get('/users/:l_user', (req, res) => {
   const l_user = req.params.l_user; // Extracting the l_user parameter from the request
 
