@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -69,6 +69,11 @@ class _UpdateContactPageState extends State<UpdateContact> {
   late TextEditingController _relationshipTypeController;
   late TextEditingController _tagsController;
   late TextEditingController _notesController;
+  bool _viewAll = false;
+  String _sharedWith = '';
+  List<String> _selectedUsers = [];
+  int? userId;
+  DateTime? _selectedDate;
   //late String _initialContactName; // To store initially fetched name
 
   bool isLoading = false;
@@ -101,23 +106,42 @@ class _UpdateContactPageState extends State<UpdateContact> {
     _relationshipTypeController = TextEditingController();
     _tagsController = TextEditingController();
     _notesController = TextEditingController();
-    // DateTime? _selectedDate;
-    //date picker
-    // Future<void> _selectDate(BuildContext context) async {
-    //   final DateTime? picked = await showDatePicker(
-    //     context: context,
-    //     initialDate: DateTime.now(),
-    //     firstDate: DateTime(1900),
-    //     lastDate: DateTime.now(),
-    //   );
-    //   if (picked != null && picked != _selectedDate) {
-    //     setState(() {
-    //       _selectedDate = picked;
-    //       _dateOfBirthController.text =
-    //           '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}';
-    //     });
-    //   }
-    // }
+    _loadUserId();
+  }
+
+  Future<void> _loadUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userId = prefs.getInt('userId');
+      _selectedUsers.add(userId.toString());
+    });
+  }
+
+  void _toggleViewAll(bool? value) {
+    setState(() {
+      _viewAll = value ?? false;
+      if (_viewAll) {
+        // Clear selected users if View All is selected
+        _selectedUsers.clear();
+      }
+    });
+  }
+
+  //date picker
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+        _dateOfBirthController.text =
+            '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}';
+      });
+    }
   }
 
   Future<void> _fetchInitialContactDetails() async {
@@ -182,12 +206,15 @@ class _UpdateContactPageState extends State<UpdateContact> {
     final emailType3 = _emailType3Controller.text;
     final organization = _organizationController.text;
     final jobTitle = _jobTitleController.text;
-    // final dateOfBirth =
-    //     _selectedDate != null ? _dateOfBirthController.text : null;
+    final dateOfBirth =
+        _selectedDate != null ? _dateOfBirthController.text : null;
     final websiteUrl = _websiteUrlController.text;
     final relationshipType = _relationshipTypeController.text;
     final tags = _tagsController.text;
     final notes = _notesController.text;
+    final viewAll = _viewAll;
+    //String sharedWith = _sharedWith;
+    final shareUserIds = _selectedUsers.join(',');
 
     // Create the request body
     final body = jsonEncode({
@@ -196,6 +223,7 @@ class _UpdateContactPageState extends State<UpdateContact> {
       'city': city,
       'state': state,
       'pin_code': pinCode,
+      'user': userId,
       'phone_number1': phoneNumber1,
       'phone_type1': phoneType1,
       'phone_number2': phoneNumber2,
@@ -210,11 +238,13 @@ class _UpdateContactPageState extends State<UpdateContact> {
       'email_type3': emailType3,
       'organization': organization,
       'job_title': jobTitle,
-      // 'date_of_birth': dateOfBirth,
+      'date_of_birth': dateOfBirth,
       'website_url': websiteUrl,
       'relationship_type': relationshipType,
       'tags': tags,
       'notes': notes,
+      'visible_to_all': viewAll,
+      'share_userid': shareUserIds,
     });
     setState(() => isLoading = true);
     try {
@@ -475,7 +505,7 @@ class _UpdateContactPageState extends State<UpdateContact> {
                           labelText: 'Date of Birth',
                         ),
                         onTap: () {
-                          // _selectDate(context);
+                          _selectDate(context);
                         },
                         readOnly: true,
                       ),
@@ -513,12 +543,44 @@ class _UpdateContactPageState extends State<UpdateContact> {
                     ),
                   ],
                 ),
+                Row(
+                  children: [
+                    Expanded(
+                      //const SizedBox(height: 16),
+                      child: TextFormField(
+                        // controller: _notesController,
+                        decoration: const InputDecoration(
+                          labelText: 'Notes',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () {
+                          _showShareDialog(context);
+                        },
+                        child: InputDecorator(
+                          decoration: const InputDecoration(
+                            labelText: 'Share with',
+                          ),
+                          child: Text(_sharedWith.isNotEmpty
+                              ? _sharedWith
+                              : 'Select users'),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 16),
-                TextFormField(
-                  // controller: _notesController,
-                  decoration: const InputDecoration(
-                    labelText: 'Notes',
-                  ),
+                Row(
+                  children: [
+                    Checkbox(
+                      value: _viewAll,
+                      onChanged: _toggleViewAll,
+                    ),
+                    Text('View All'),
+                  ],
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
@@ -535,5 +597,87 @@ class _UpdateContactPageState extends State<UpdateContact> {
         ),
       ),
     );
+  }
+
+  void _showShareDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Share with'),
+          content: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FutureBuilder<List<Map<String, dynamic>>>(
+                    future: _fetchUsers(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator();
+                      } else if (snapshot.hasError) {
+                        return Text('Error: ${snapshot.error}');
+                      } else {
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Add a checkbox for "Select All" if needed
+                            ...snapshot.data!.map((user) => CheckboxListTile(
+                                  title: Text(user['name']),
+                                  value: _selectedUsers.contains(user['id']),
+                                  onChanged: (bool? selected) {
+                                    setState(() {
+                                      if (selected!) {
+                                        _selectedUsers.add(user['id']);
+                                      } else {
+                                        _selectedUsers.remove(user['id']);
+                                      }
+                                    });
+                                  },
+                                )),
+                          ],
+                        );
+                      }
+                    },
+                  ),
+                ],
+              );
+            },
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchUsers() async {
+    try {
+      final response = await http.get(Uri.parse('http://localhost:3000/users'));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> userData = json.decode(response.body);
+
+        List<Map<String, dynamic>> users = userData.map((user) {
+          return {
+            'id': user['userid'].toString(), // Convert user ID to string
+            'name': user['username'],
+          };
+        }).toList();
+
+        return users;
+      } else {
+        throw Exception('Failed to load users');
+      }
+    } catch (error) {
+      print('Error fetching users: $error');
+      throw Exception('Failed to load users');
+    }
   }
 }

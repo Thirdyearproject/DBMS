@@ -543,18 +543,32 @@ app.put("/contacts/:contactId", (req, res) => {
                     
                     // Iterate over each user ID and perform separate update operations
                     shareUserIds.forEach(userId => {
+                      // First, delete rows with the specified contactId
                       pool.query(
-                        "UPDATE share SET share_userid=? WHERE contactid=?",
-                        [userId, contactId],
-                        (error, shareResult) => {
-                          if (error) {
-                            console.error("Error updating share:", error);
-                            // Handle the error
+                          "DELETE FROM share WHERE contactid=?",
+                          [contactId],
+                          (deleteError, deleteResult) => {
+                              if (deleteError) {
+                                  console.error("Error deleting rows:", deleteError);
+                                  // Handle the error if needed
+                              } else {
+                                  // After successful deletion, insert new rows
+                                  pool.query(
+                                      "INSERT INTO share (share_userid, contactid) VALUES (?, ?)",
+                                      [userId, contactId],
+                                      (insertError, insertResult) => {
+                                          if (insertError) {
+                                              console.error("Error inserting rows:", insertError);
+                                              // Handle the error if needed
+                                          } else {
+                                              // Handle success
+                                          }
+                                      }
+                                  );
+                              }
                           }
-                          // Handle success
-                        }
                       );
-                    });
+                  });                  
                     
                     res.status(200).json({
                       message: `Contact with ID ${contactId} updated successfully.`,
