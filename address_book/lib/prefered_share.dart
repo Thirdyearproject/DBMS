@@ -44,7 +44,7 @@ class _PreferredShareState extends State<PreferredShare> {
 
   Future<void> _fetchSelectedUsers() async {
     final response =
-        await http.get(Uri.parse('https://localhost:3000/selectedUsers'));
+        await http.get(Uri.parse('https://localhost:3000/users/$userId'));
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       setState(() {

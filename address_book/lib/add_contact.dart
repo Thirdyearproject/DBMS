@@ -38,6 +38,7 @@ class _AddContactState extends State<AddContact> {
   final _notesController = TextEditingController();
   bool _viewAll = false;
   String _sharedWith = '';
+  List<String> _selectedUsers = [];
   int? userId;
   DateTime? _selectedDate;
 
@@ -51,6 +52,17 @@ class _AddContactState extends State<AddContact> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       userId = prefs.getInt('userId');
+      _selectedUsers.add(userId.toString());
+    });
+  }
+
+  void _toggleViewAll(bool? value) {
+    setState(() {
+      _viewAll = value ?? false;
+      if (_viewAll) {
+        // Clear selected users if View All is selected
+        _selectedUsers.clear();
+      }
     });
   }
 
@@ -127,8 +139,6 @@ class _AddContactState extends State<AddContact> {
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(
-                    labelText: 'Name',
-                    fillColor: Colors.white,
                     filled: true,
                   ),
                   validator: (value) {
@@ -146,8 +156,6 @@ class _AddContactState extends State<AddContact> {
                         controller: _localityController,
                         decoration: const InputDecoration(
                           labelText: 'Locality',
-                          fillColor: Colors.white,
-                          filled: true,
                         ),
                       ),
                     ),
@@ -157,8 +165,6 @@ class _AddContactState extends State<AddContact> {
                         controller: _cityController,
                         decoration: const InputDecoration(
                           labelText: 'City',
-                          fillColor: Colors.white,
-                          filled: true,
                         ),
                       ),
                     ),
@@ -172,8 +178,6 @@ class _AddContactState extends State<AddContact> {
                         controller: _stateController,
                         decoration: const InputDecoration(
                           labelText: 'State',
-                          fillColor: Colors.white,
-                          filled: true,
                         ),
                       ),
                     ),
@@ -183,8 +187,6 @@ class _AddContactState extends State<AddContact> {
                         controller: _pinCodeController,
                         decoration: const InputDecoration(
                           labelText: 'Pin Code',
-                          fillColor: Colors.white,
-                          filled: true,
                         ),
                       ),
                     ),
@@ -198,8 +200,6 @@ class _AddContactState extends State<AddContact> {
                         controller: _phoneNumber1Controller,
                         decoration: const InputDecoration(
                           labelText: 'Phone Number 1',
-                          fillColor: Colors.white,
-                          filled: true,
                         ),
                         validator: validatePhoneNumber1,
                       ),
@@ -210,8 +210,6 @@ class _AddContactState extends State<AddContact> {
                         controller: _phoneType1Controller,
                         decoration: const InputDecoration(
                           labelText: 'Phone1 Type',
-                          fillColor: Colors.white,
-                          filled: true,
                         ),
                       ),
                     ),
@@ -225,8 +223,6 @@ class _AddContactState extends State<AddContact> {
                         controller: _phoneNumber2Controller,
                         decoration: const InputDecoration(
                           labelText: 'Phone Number 2',
-                          fillColor: Colors.white,
-                          filled: true,
                         ),
                         validator: validatePhoneNumber,
                       ),
@@ -237,8 +233,6 @@ class _AddContactState extends State<AddContact> {
                         controller: _phoneType2Controller,
                         decoration: const InputDecoration(
                           labelText: 'Phone2 Type',
-                          fillColor: Colors.white,
-                          filled: true,
                         ),
                       ),
                     ),
@@ -252,8 +246,6 @@ class _AddContactState extends State<AddContact> {
                         controller: _phoneNumber3Controller,
                         decoration: const InputDecoration(
                           labelText: 'Phone Number 3',
-                          fillColor: Colors.white,
-                          filled: true,
                         ),
                         validator: validatePhoneNumber,
                       ),
@@ -264,8 +256,6 @@ class _AddContactState extends State<AddContact> {
                         controller: _phoneType3Controller,
                         decoration: const InputDecoration(
                           labelText: 'Phone3 Type',
-                          fillColor: Colors.white,
-                          filled: true,
                         ),
                       ),
                     ),
@@ -279,8 +269,6 @@ class _AddContactState extends State<AddContact> {
                         controller: _emailAddress1Controller,
                         decoration: const InputDecoration(
                           labelText: 'Email Address1',
-                          fillColor: Colors.white,
-                          filled: true,
                         ),
                         validator: validateEmail,
                       ),
@@ -291,8 +279,6 @@ class _AddContactState extends State<AddContact> {
                         controller: _emailType1Controller,
                         decoration: const InputDecoration(
                           labelText: 'Email1 Type',
-                          fillColor: Colors.white,
-                          filled: true,
                         ),
                       ),
                     ),
@@ -306,8 +292,6 @@ class _AddContactState extends State<AddContact> {
                         controller: _emailAddress2Controller,
                         decoration: const InputDecoration(
                           labelText: 'Email Address2',
-                          fillColor: Colors.white,
-                          filled: true,
                         ),
                         validator: validateEmail,
                       ),
@@ -318,8 +302,6 @@ class _AddContactState extends State<AddContact> {
                         controller: _emailType2Controller,
                         decoration: const InputDecoration(
                           labelText: 'Email2 Type',
-                          fillColor: Colors.white,
-                          filled: true,
                         ),
                       ),
                     ),
@@ -333,8 +315,6 @@ class _AddContactState extends State<AddContact> {
                         controller: _emailAddress3Controller,
                         decoration: const InputDecoration(
                           labelText: 'Email Address3',
-                          fillColor: Colors.white,
-                          filled: true,
                         ),
                         validator: validateEmail,
                       ),
@@ -345,8 +325,6 @@ class _AddContactState extends State<AddContact> {
                         controller: _emailType3Controller,
                         decoration: const InputDecoration(
                           labelText: 'Email3 Type',
-                          fillColor: Colors.white,
-                          filled: true,
                         ),
                       ),
                     ),
@@ -360,8 +338,6 @@ class _AddContactState extends State<AddContact> {
                         controller: _organizationController,
                         decoration: const InputDecoration(
                           labelText: 'Organization',
-                          fillColor: Colors.white,
-                          filled: true,
                         ),
                       ),
                     ),
@@ -371,8 +347,6 @@ class _AddContactState extends State<AddContact> {
                         controller: _jobTitleController,
                         decoration: const InputDecoration(
                           labelText: 'Job Title',
-                          fillColor: Colors.white,
-                          filled: true,
                         ),
                       ),
                     ),
@@ -386,8 +360,6 @@ class _AddContactState extends State<AddContact> {
                         controller: _dateOfBirthController,
                         decoration: const InputDecoration(
                           labelText: 'Date of Birth',
-                          fillColor: Colors.white,
-                          filled: true,
                         ),
                         onTap: () {
                           _selectDate(context);
@@ -401,8 +373,6 @@ class _AddContactState extends State<AddContact> {
                         controller: _websiteUrlController,
                         decoration: const InputDecoration(
                           labelText: 'Website URL',
-                          fillColor: Colors.white,
-                          filled: true,
                         ),
                       ),
                     ),
@@ -416,8 +386,6 @@ class _AddContactState extends State<AddContact> {
                         controller: _relationshipTypeController,
                         decoration: const InputDecoration(
                           labelText: 'Relationship Type',
-                          fillColor: Colors.white,
-                          filled: true,
                         ),
                       ),
                     ),
@@ -427,8 +395,6 @@ class _AddContactState extends State<AddContact> {
                         controller: _tagsController,
                         decoration: const InputDecoration(
                           labelText: 'Tags',
-                          fillColor: Colors.white,
-                          filled: true,
                         ),
                       ),
                     ),
@@ -441,8 +407,6 @@ class _AddContactState extends State<AddContact> {
                         controller: _notesController,
                         decoration: const InputDecoration(
                           labelText: 'Notes',
-                          fillColor: Colors.white,
-                          filled: true,
                         ),
                       ),
                     ),
@@ -455,8 +419,6 @@ class _AddContactState extends State<AddContact> {
                         child: InputDecorator(
                           decoration: const InputDecoration(
                             labelText: 'Share with',
-                            fillColor: Colors.white,
-                            filled: true,
                           ),
                           child: Text(_sharedWith.isNotEmpty
                               ? _sharedWith
@@ -464,6 +426,16 @@ class _AddContactState extends State<AddContact> {
                         ),
                       ),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Checkbox(
+                      value: _viewAll,
+                      onChanged: _toggleViewAll,
+                    ),
+                    Text('View All'),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -507,25 +479,11 @@ class _AddContactState extends State<AddContact> {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                    children: [
-                      Text('View All'),
-                      Checkbox(
-                        value: _viewAll,
-                        onChanged: (bool? value) {
-                          setState(() {
-                            _viewAll = value!;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                  FutureBuilder<List<String>>(
-                    future:
-                        _fetchUsers(), // Implement _fetchUsers() to fetch user name cards
+                  FutureBuilder<List<Map<String, dynamic>>>(
+                    future: _fetchUsers(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return CircularProgressIndicator(); // Loading indicator while fetching data
+                        return CircularProgressIndicator();
                       } else if (snapshot.hasError) {
                         return Text('Error: ${snapshot.error}');
                       } else {
@@ -534,15 +492,14 @@ class _AddContactState extends State<AddContact> {
                           children: [
                             // Add a checkbox for "Select All" if needed
                             ...snapshot.data!.map((user) => CheckboxListTile(
-                                  title: Text(user),
-                                  value: _viewAll || _sharedWith.contains(user),
+                                  title: Text(user['name']),
+                                  value: _selectedUsers.contains(user['id']),
                                   onChanged: (bool? selected) {
                                     setState(() {
                                       if (selected!) {
-                                        _sharedWith += user + ', ';
+                                        _selectedUsers.add(user['id']);
                                       } else {
-                                        _sharedWith = _sharedWith.replaceAll(
-                                            user + ', ', '');
+                                        _selectedUsers.remove(user['id']);
                                       }
                                     });
                                   },
@@ -569,28 +526,25 @@ class _AddContactState extends State<AddContact> {
     );
   }
 
-  Future<List<String>> _fetchUsers() async {
+  Future<List<Map<String, dynamic>>> _fetchUsers() async {
     try {
-      // Make a GET request to your API endpoint to fetch user data
       final response = await http.get(Uri.parse('http://localhost:3000/users'));
 
       if (response.statusCode == 200) {
-        // If the request is successful, parse the response body
-        final List<dynamic> data = json.decode(response.body);
+        final List<dynamic> userData = json.decode(response.body);
 
-        // Extract user names from the response data
-        List<String> userNames = [];
-        for (var user in data) {
-          userNames.add(user['name']);
-        }
+        List<Map<String, dynamic>> users = userData.map((user) {
+          return {
+            'id': user['userid'].toString(), // Convert user ID to string
+            'name': user['username'],
+          };
+        }).toList();
 
-        return userNames;
+        return users;
       } else {
-        // If the server returns an error response, throw an exception
         throw Exception('Failed to load users');
       }
     } catch (error) {
-      // Catch any errors that occur during the request
       print('Error fetching users: $error');
       throw Exception('Failed to load users');
     }
@@ -623,8 +577,8 @@ class _AddContactState extends State<AddContact> {
     final relationshipType = _relationshipTypeController.text;
     final tags = _tagsController.text;
     final notes = _notesController.text;
-    bool viewAll = _viewAll;
-    String sharedWith = _sharedWith;
+    final viewAll = _viewAll;
+    final shareUserIds = _selectedUsers.join(',');
 
     // Create the request body
     final body = jsonEncode({
@@ -654,7 +608,7 @@ class _AddContactState extends State<AddContact> {
       'tags': tags,
       'notes': notes,
       'visible_to_all': viewAll,
-      'sharewith': sharedWith
+      'share_userid': shareUserIds
     });
 
     // Send the request
@@ -703,8 +657,9 @@ class _AddContactState extends State<AddContact> {
     final relationshipType = _relationshipTypeController.text;
     final tags = _tagsController.text;
     final notes = _notesController.text;
-    bool viewAll = _viewAll;
-    String sharedWith = _sharedWith;
+    final viewAll = _viewAll;
+    //String sharedWith = _sharedWith;
+    final shareUserIds = _selectedUsers.join(',');
 
     // Create the request body
     final body = jsonEncode({
@@ -734,7 +689,7 @@ class _AddContactState extends State<AddContact> {
       'tags': tags,
       'notes': notes,
       'visible_to_all': viewAll,
-      'sharewith': sharedWith
+      'share_userid': shareUserIds,
     });
 
     // Send the request

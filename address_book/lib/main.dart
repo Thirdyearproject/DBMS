@@ -274,9 +274,15 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
-        title: Text('Address Book'),
-      ),
+          centerTitle: true,
+          title: Text('Address Book'),
+          leading: isLoggedIn
+              ? null
+              : IconButton(
+                  icon: Icon(Icons.arrow_back),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  })),
       body: Column(
         children: [
           // Small bar below the title bar

@@ -130,18 +130,40 @@ app.post('/login', (req, res) => {
 
 // Define a route to get all usernames
 app.get('/users', (req, res) => {
-  // Query the database to retrieve all usernames
-  pool.query('SELECT username FROM user', (error, results, fields) => {
+  // Query the database to retrieve all user IDs and usernames
+  pool.query('SELECT userid, username FROM user', (error, results, fields) => {
     if (error) {
-      console.error("Error retrieving usernames:", error);
+      console.error("Error retrieving user data:", error);
       res.status(500).json({ error: 'Internal server error' });
     } else {
-      // Extract usernames from the query results
-      const usernames = results.map(row => row.username);
-      res.json({ usernames });
+      // Extract user IDs and usernames from the query results
+      const userData = results.map(row => ({
+        userid: row.userid,
+        username: row.username
+      }));
+      res.json(userData);
     }
   });
 });
+app.get('/users/:l_user', (req, res) => {
+  const l_user = req.params.l_user; // Extracting the l_user parameter from the request
+
+  // Query the database to retrieve user IDs and usernames where currentuser matches l_user
+  pool.query('SELECT id FROM usershares WHERE current_user_id = ?', [l_user], (error, results, fields) => {
+    if (error) {
+      console.error("Error retrieving user data:", error);
+      res.status(500).json({ error: 'Internal server error' });
+    } else {
+      // Extract user IDs and usernames from the query results
+      const userData = results.map(row => ({
+        userid: row.id,
+        currentuser: row.currentuser
+      }));
+      res.json(userData);
+    }
+  });
+});
+
 
 //add 
 app.post("/contacts", (req, res) => {
