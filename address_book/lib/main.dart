@@ -220,41 +220,46 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       isLoading = true;
     });
-    if (areFiltersApplied()) {
-      final queryParams = {
-        'searchQuery': searchQuery,
-        'city': cityFilter,
-        'dateOfBirthStart': dateOfBirthStartFilter,
-        'dateOfBirthEnd': dateOfBirthEndFilter,
-        'organization': organizationFilter,
-        'job': jobFilter,
-        'relation': relationFilter
-            //'showSpecificNamecards': showSpecificNamecards
-            .toString(), // Add filter for specific namecards
-      };
-      if (isLoggedIn && showSpecificNamecards) {
-        queryParams['user'] = userId.toString();
-      }
-      final uri = Uri.http('localhost:3000', '/filter', queryParams);
-      final response = await http.get(uri);
-      if (response.statusCode == 200) {
-        Iterable l = json.decode(response.body);
-        contacts = List<Contact>.from(
-            l.map((model) => Contact.fromJson(model)).toList());
+
+    try {
+      if (areFiltersApplied()) {
+        final queryParams = {
+          'searchQuery': searchQuery,
+          'city': cityFilter,
+          'dateOfBirthStart': dateOfBirthStartFilter,
+          'dateOfBirthEnd': dateOfBirthEndFilter,
+          'organization': organizationFilter,
+          'job': jobFilter,
+          'relation': relationFilter,
+        };
+        if (isLoggedIn && showSpecificNamecards) {
+          queryParams['user'] = userId.toString();
+        }
+        final uri = Uri.http('localhost:3000', '/filter', queryParams);
+        final response = await http.get(uri);
+        if (response.statusCode == 200) {
+          Iterable l = json.decode(response.body);
+          contacts = List<Contact>.from(
+              l.map((model) => Contact.fromJson(model)).toList());
+        } else {
+          throw Exception('Failed to load contacts: ${response.reasonPhrase}');
+        }
       } else {
-        throw Exception('Failed to load contacts');
+        final response =
+            await http.get(Uri.parse('http://localhost:3000/contacts'));
+        if (response.statusCode == 200) {
+          Iterable l = json.decode(response.body);
+          contacts = List<Contact>.from(
+              l.map((model) => Contact.fromJson(model)).toList());
+        } else {
+          throw Exception('Failed to load contacts: ${response.reasonPhrase}');
+        }
       }
-    } else {
-      final response =
-          await http.get(Uri.parse('http://localhost:3000/contacts'));
-      if (response.statusCode == 200) {
-        Iterable l = json.decode(response.body);
-        contacts = List<Contact>.from(
-            l.map((model) => Contact.fromJson(model)).toList());
-      } else {
-        throw Exception('Failed to load contacts');
-      }
+    } catch (e) {
+      print('Error fetching contacts: $e');
+      // You can also show a snackbar or dialog to inform the user about the error
     }
+
     setState(() {
       isLoading = false;
     });

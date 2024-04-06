@@ -953,8 +953,6 @@ app.get("/contacts/user/:userId", (req, res) => {
   });
 });
 
-
-
 // Get all emails
 app.get("/emails", (req, res) => {
   pool.query("SELECT * FROM emails", (error, results) => {
@@ -1102,8 +1100,8 @@ app.get('/filter', (req, res) => {
   }
 
   if (city) {
-    query += ' AND LOWER(a.city) = ?';
-    queryParams.push(city.toLowerCase());
+    query += ' AND LOWER(a.city) LIKE ?'; // Changed to LIKE
+    queryParams.push('%' + city.toLowerCase() + '%'); // Removed % wildcard characters
   }
 
   if (dateOfBirthStart && dateOfBirthEnd) {
@@ -1121,10 +1119,8 @@ app.get('/filter', (req, res) => {
     queryParams.push('%' + job.toLowerCase() + '%');
   }
 
-  if (relation) {
-    query += ' AND LOWER(c.relation) LIKE ?';
-    queryParams.push('%' + relation.toLowerCase() + '%');
-  }
+  console.log(query);
+  console.log(queryParams);
 
   pool.query(query, queryParams, (error, results) => {
     if (error) {
