@@ -55,8 +55,8 @@ class _PreferredShareState extends State<PreferredShare> {
   Future<void> _submitSelections() async {
     if (userId == null) return;
     final requestData = {
-      'userId': userId,
-      'selectedUserIds': _selectedUserIds,
+      'current_user_id': userId,
+      'share_user_id': _selectedUserIds,
     };
     final response = await http.put(
       Uri.parse(
