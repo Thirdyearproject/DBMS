@@ -56,7 +56,7 @@ class _PreferredShareState extends State<PreferredShare> {
     if (userId == null) return;
     final requestData = {
       'current_user_id': userId,
-      'share_user_ids': _selectedUserIds,
+      'shared_user_ids': _selectedUserIds,
     };
     print('JSON being sent: $requestData');
     final response = await http.put(
