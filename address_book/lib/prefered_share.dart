@@ -12,7 +12,7 @@ class PreferredShare extends StatefulWidget {
 
 class _PreferredShareState extends State<PreferredShare> {
   List<User> _users = [];
-  List<User> _selectedUsers = [];
+  List<int> _selectedUserIds = [];
   int? userId;
 
   @override
@@ -23,76 +23,40 @@ class _PreferredShareState extends State<PreferredShare> {
 
   Future<void> _loadUserIdAndFetchData() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      userId = prefs.getInt('userId');
-    });
-    await Future.wait(
-        [_fetchUsers(), _fetchSelectedUsers()]); // Fetch concurrently
+    final storedUserId = prefs.getInt('userId');
+
+    if (storedUserId != null) {
+      setState(() {
+        userId = storedUserId;
+      });
+      await _fetchUsers(); // Fetch users
+    } else {
+      print('User ID not found in SharedPreferences.');
+      // Handle the case where the user ID is not found, e.g., show an error message
+    }
   }
 
-  Future<List<User>> _fetchUsers() async {
+  Future<void> _fetchUsers() async {
     try {
       final response = await http.get(Uri.parse('http://localhost:3000/users'));
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        return data.map((json) => User.fromJson(json)).toList();
+        setState(() {
+          _users = data.map((json) => User.fromJson(json)).toList();
+        });
       } else {
         throw Exception('Failed to load users: ${response.statusCode}');
       }
     } catch (error) {
       print('Error fetching users: $error');
-      return []; // Return an empty list on error
     }
-  }
-
-  Future<void> _fetchSelectedUsers() async {
-    if (userId == null) return;
-    try {
-      final response =
-          await http.get(Uri.parse('http://localhost:3000/UserShares/$userId'));
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        setState(() {
-          _selectedUsers = data.map((id) {
-            final user = _users.firstWhere((user) => user.id == id,
-                orElse: () => User(
-                    id: -1, username: 'Unknown')); // Handle if ID not found
-            return user;
-          }).toList();
-
-          // Add current user to selected users if not already present
-          if (!_selectedUsers.any((user) => user.id == userId)) {
-            _selectedUsers.add(User(id: userId!, username: ''));
-          }
-        });
-      } else {
-        throw Exception(
-            'Failed to load selected users: ${response.statusCode}');
-      }
-    } catch (error) {
-      print('Error fetching selected users: $error');
-    }
-  }
-
-  Future<void> _toggleUserSelection(User user, bool selected) async {
-    if (userId == null) {
-      return; // User ID not available, do not proceed
-    }
-    setState(() {
-      if (selected) {
-        _selectedUsers.add(user);
-      } else {
-        _selectedUsers.remove(user);
-      }
-    });
   }
 
   Future<void> _submitSelections() async {
     if (userId == null) return;
-    final selectedUserIds = _selectedUsers.map((user) => user.id).toList();
     final requestData = {
-      'user': userId,
-      'selected_users': selectedUserIds,
+      'userId': userId,
+      'selectedUserIds': _selectedUserIds,
     };
     final response = await http.put(
       Uri.parse(
@@ -121,34 +85,24 @@ class _PreferredShareState extends State<PreferredShare> {
           )
         ],
       ),
-      body: FutureBuilder<List<User>>(
-        future: _fetchUsers(), // Use _fetchUsers() directly as the future
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No users found.'));
-          } else {
-            _users = snapshot.data!; // Update _users with fetched data
-            return ListView.builder(
-              itemCount: _users.length,
-              itemBuilder: (context, index) {
-                final user = _users[index];
-                final bool isSelected = _selectedUsers
-                    .any((selectedUser) => selectedUser.id == user.id);
-                return CheckboxListTile(
-                  title:
-                      Text(user.username ?? 'Unknown'), // Handle null usernames
-                  value: isSelected,
-                  onChanged: (selected) {
-                    _toggleUserSelection(user, selected!);
-                  },
-                );
-              },
-            );
-          }
+      body: ListView.builder(
+        itemCount: _users.length,
+        itemBuilder: (context, index) {
+          final user = _users[index];
+          final bool isSelected = _selectedUserIds.contains(user.userId);
+          return CheckboxListTile(
+            title: Text(user.username.isNotEmpty ? user.username : 'Unknown'),
+            value: isSelected,
+            onChanged: (selected) {
+              setState(() {
+                if (selected!) {
+                  _selectedUserIds.add(user.userId);
+                } else {
+                  _selectedUserIds.remove(user.userId);
+                }
+              });
+            },
+          );
         },
       ),
     );
@@ -156,22 +110,15 @@ class _PreferredShareState extends State<PreferredShare> {
 }
 
 class User {
-  final int id;
-  final String? username; // Allow username to be null
+  final int userId;
+  final String username;
 
-  User({required this.id, this.username});
+  User({required this.userId, required this.username});
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'] as int,
-      username: json['username'] as String?, // Handle null usernames
+      userId: json['userid'] as int,
+      username: json['username'] as String,
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'username': username,
-    };
   }
 }

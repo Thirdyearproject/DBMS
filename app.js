@@ -92,6 +92,7 @@ app.get('/users', (req, res) => {
     }
   });
 });
+
 app.get('/UserShares/:loggedUser', (req, res) => {
   const loggedUser = req.params.loggedUser;
 
