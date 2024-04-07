@@ -39,8 +39,7 @@ const router = express.Router();
       queryParams.push('%' + job.toLowerCase() + '%');
     }
   
-    console.log(query);
-    console.log(queryParams);
+    
   
     pool.query(query, queryParams, (error, results) => {
       if (error) {
@@ -93,8 +92,7 @@ const router = express.Router();
       queryParams.push('%' + job.toLowerCase() + '%');
     }
   
-    console.log(query);
-    console.log(queryParams);
+    
   
     pool.query(query, queryParams, (error, results) => {
       if (error) {
@@ -158,8 +156,7 @@ const router = express.Router();
     `;
     queryParams.push(userId, userId, userId);
   
-    console.log(query);
-    console.log(queryParams);
+    
   
     pool.query(query, queryParams, (error, results) => {
       if (error) {
