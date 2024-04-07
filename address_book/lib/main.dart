@@ -72,7 +72,6 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       isLoading = true;
     });
-
     try {
       final response = await http.post(
         Uri.parse('http://localhost:3000/login'),
@@ -82,7 +81,6 @@ class _LoginScreenState extends State<LoginScreen> {
         }),
         headers: {'Content-Type': 'application/json'},
       );
-
       if (response.statusCode == 200) {
         final userId = jsonDecode(response.body)['userId'];
         final prefs = await SharedPreferences.getInstance();
@@ -96,7 +94,6 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       print('Error during login: $e');
     }
-
     setState(() {
       isLoading = false;
     });
@@ -106,7 +103,6 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       isLoading = true;
     });
-
     try {
       final response = await http.post(
         Uri.parse('http://localhost:3000/signup'),
@@ -116,7 +112,6 @@ class _LoginScreenState extends State<LoginScreen> {
         }),
         headers: {'Content-Type': 'application/json'},
       );
-
       if (response.statusCode == 201) {
         // Check for status code 201 for successful signup
         final prefs = await SharedPreferences.getInstance();
@@ -129,7 +124,6 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       print('Error during sign-up: $e');
     }
-
     setState(() {
       isLoading = false;
     });
@@ -220,7 +214,6 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       isLoading = true;
     });
-
     try {
       if (areFiltersApplied()) {
         final queryParams = {
@@ -261,7 +254,6 @@ class _MyHomePageState extends State<MyHomePage> {
       print('Error fetching contacts: $e');
       // You can also show a snackbar or dialog to inform the user about the error
     }
-
     setState(() {
       isLoading = false;
     });
@@ -322,6 +314,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       setState(() {
                         isLoggedIn = false;
                       });
+                      _fetchContacts(); // Refresh contact list after logout
                     } else {
                       // Show login/signup window
                       await showDialog(
@@ -334,8 +327,10 @@ class _MyHomePageState extends State<MyHomePage> {
                       setState(
                         () {
                           isLoggedIn = storedUserId != null;
+                          userId = storedUserId; // Update userId after login
                         },
                       );
+                      _fetchContacts(); // Refresh contact list after login
                     }
                   },
                   child: Text(isLoggedIn ? 'Logout' : 'Sign In'),
