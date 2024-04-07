@@ -56,7 +56,7 @@ class _PreferredShareState extends State<PreferredShare> {
     if (userId == null) return;
     final requestData = {
       'current_user_id': userId,
-      'share_user_id': _selectedUserIds,
+      'share_user_ids': _selectedUserIds,
     };
     final response = await http.put(
       Uri.parse(
