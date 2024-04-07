@@ -129,78 +129,77 @@ app.get('/users/:l_user', (req, res) => {
 });
 
 //add user share permission  with multiple share 
-app.post("/userShares", (req, res) => {
-  const {
-    current_user_id,
-    shared_user_ids
-  } = req.body;
+// app.post("/userShares", (req, res) => {
+//   const {
+//     current_user_id,
+//     shared_user_ids
+//   } = req.body;
 
-  pool.getConnection((err, connection) => {
-    if (err) {
-      console.error("Error getting connection:", err);
-      return res.status(500).json({ error: "Error sharing users." });
-    }
+//   pool.getConnection((err, connection) => {
+//     if (err) {
+//       console.error("Error getting connection:", err);
+//       return res.status(500).json({ error: "Error sharing users." });
+//     }
 
-    // Begin transaction
-    connection.beginTransaction((err) => {
-      if (err) {
-        console.error("Error beginning transaction:", err);
-        connection.release();
-        return res.status(500).json({ error: "Error sharing users." });
-      }
+//     // Begin transaction
+//     connection.beginTransaction((err) => {
+//       if (err) {
+//         console.error("Error beginning transaction:", err);
+//         connection.release();
+//         return res.status(500).json({ error: "Error sharing users." });
+//       }
 
-      // Insert share for each shared user
-      const shareInsertPromises = shared_user_ids.map(sharedUserId => {
-        return new Promise((resolve, reject) => {
-          connection.query(
-            "INSERT INTO UserShares (current_user_id, shared_user_id) VALUES (?, ?)",
-            [current_user_id, sharedUserId],
-            (error, shareResult) => {
-              if (error) {
-                console.error("Error sharing user:", error);
-                reject(error);
-              } else {
-                resolve();
-              }
-            }
-          );
-        });
-      });
+//       // Insert share for each shared user
+//       const shareInsertPromises = shared_user_ids.map(sharedUserId => {
+//         return new Promise((resolve, reject) => {
+//           connection.query(
+//             "INSERT INTO UserShares (current_user_id, shared_user_id) VALUES (?, ?)",
+//             [current_user_id, sharedUserId],
+//             (error, shareResult) => {
+//               if (error) {
+//                 console.error("Error sharing user:", error);
+//                 reject(error);
+//               } else {
+//                 resolve();
+//               }
+//             }
+//           );
+//         });
+//       });
 
-      // Execute all share insertions
-      Promise.all(shareInsertPromises)
-        .then(() => {
-          // Commit transaction if everything is successful
-          connection.commit((err) => {
-            if (err) {
-              console.error("Error committing transaction:", err);
-              return connection.rollback(() => {
-                connection.release();
-                res.status(500).json({ error: "Error sharing users." });
-              });
-            }
-            connection.release();
-            res.status(201).json({
-              message: "Users shared successfully",
-            });
-          });
-        })
-        .catch(error => {
-          console.error("Error sharing users:", error);
-          return connection.rollback(() => {
-            connection.release();
-            res.status(500).json({ error: "Error sharing users." });
-          });
-        });
-    });
-  });
-});
+//       // Execute all share insertions
+//       Promise.all(shareInsertPromises)
+//         .then(() => {
+//           // Commit transaction if everything is successful
+//           connection.commit((err) => {
+//             if (err) {
+//               console.error("Error committing transaction:", err);
+//               return connection.rollback(() => {
+//                 connection.release();
+//                 res.status(500).json({ error: "Error sharing users." });
+//               });
+//             }
+//             connection.release();
+//             res.status(201).json({
+//               message: "Users shared successfully",
+//             });
+//           });
+//         })
+//         .catch(error => {
+//           console.error("Error sharing users:", error);
+//           return connection.rollback(() => {
+//             connection.release();
+//             res.status(500).json({ error: "Error sharing users." });
+//           });
+//         });
+//     });
+//   });
+// });
 
 //update user share permission multiple share
-app.put("/userShares/:id", (req, res) => {
-  const current_user_id = req.params.id;
-  const { shared_user_ids } = req.body;
-
+app.put("/userShares", (req, res) => {
+  const { current_user_id,shared_user_ids } = req.body;
+   console.log(req.body)
   // Check if shared_user_ids is provided and not empty
   if (!shared_user_ids || shared_user_ids.length === 0) {
     return res.status(400).json({ error: "shared_user_ids must be a non-empty array." });
