@@ -232,10 +232,12 @@ class _MyHomePageState extends State<MyHomePage> {
           'job': jobFilter,
           'relation': relationFilter,
         };
-        if (isLoggedIn && showSpecificNamecards) {
+        if (isLoggedIn) {
           queryParams['user'] = userId.toString();
         }
+        print("Sent JSON data: ${jsonEncode(queryParams)}");
         final uri = Uri.http('localhost:3000', '/filter', queryParams);
+        print(uri);
         final response = await http.get(uri);
         if (response.statusCode == 200) {
           Iterable l = json.decode(response.body);

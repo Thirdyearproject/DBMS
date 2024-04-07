@@ -601,45 +601,43 @@ const router = express.Router();
   router.get("/user/:userId", (req, res) => {
     const userId = req.params.userId;
     const query = `
-      SELECT c.contact_id, 
-             c.userid, 
-             c.name, 
-             c.organization, 
-             c.job_title, 
-             c.date_of_birth, 
-             c.website_url, 
-             c.notes, 
-             c.tags, 
-             c.visible_to_all,
-             a.Address_contact_id,
-             a.locality,
-             a.city,
-             a.state,
-             a.pin_code,
-             p.phone_contact_id,
-             p.phone_number1,
-             p.phone_type1,
-             p.phone_number2,
-             p.phone_type2,
-             p.phone_number3,
-             p.phone_type3,
-             e.email_contact_id,
-             e.email_address1,
-             e.email_type1,
-             e.email_address2,
-             e.email_type2,
-             e.email_address3,
-             e.email_type3,
-             r.relationship_type,
-             s.share_userid
-      FROM contacts c
-      LEFT JOIN addresses a ON c.contact_id = a.Address_contact_id
-      LEFT JOIN phone_numbers p ON c.contact_id = p.phone_contact_id
-      LEFT JOIN emails e ON c.contact_id = e.email_contact_id
-      LEFT JOIN relationships r ON c.contact_id = r.person_id
-      LEFT JOIN share s ON c.contact_id = s.contactid
-      LEFT JOIN usershares us ON c.userid = us.current_user_id
-      WHERE (c.userid = ? OR s.share_userid = ? OR us.shared_user_id = ?);
+    SELECT c.contact_id, 
+       c.userid, 
+       c.name, 
+       c.organization, 
+       c.job_title, 
+       c.date_of_birth, 
+       c.website_url, 
+       c.notes, 
+       c.tags, 
+       c.visible_to_all,
+       GROUP_CONCAT(DISTINCT a.locality) AS localities,
+       GROUP_CONCAT(DISTINCT a.city) AS cities,
+       GROUP_CONCAT(DISTINCT a.state) AS states,
+       GROUP_CONCAT(DISTINCT a.pin_code) AS pin_codes,
+       GROUP_CONCAT(DISTINCT p.phone_number1) AS phone_numbers1,
+       GROUP_CONCAT(DISTINCT p.phone_number2) AS phone_numbers2,
+       GROUP_CONCAT(DISTINCT p.phone_number3) AS phone_numbers3,
+       GROUP_CONCAT(DISTINCT p.phone_type1) AS phone_types1,
+       GROUP_CONCAT(DISTINCT p.phone_type2) AS phone_types2,
+       GROUP_CONCAT(DISTINCT p.phone_type3) AS phone_types3,
+       GROUP_CONCAT(DISTINCT e.email_address1) AS email_addresses1,
+       GROUP_CONCAT(DISTINCT e.email_address2) AS email_addresses2,
+       GROUP_CONCAT(DISTINCT e.email_address3) AS email_addresses3,
+       GROUP_CONCAT(DISTINCT e.email_type1) AS email_types1,
+       GROUP_CONCAT(DISTINCT e.email_type2) AS email_types2,
+       GROUP_CONCAT(DISTINCT e.email_type3) AS email_types3
+FROM contacts c
+LEFT JOIN addresses a ON c.contact_id = a.Address_contact_id
+LEFT JOIN phone_numbers p ON c.contact_id = p.phone_contact_id
+LEFT JOIN emails e ON c.contact_id = e.email_contact_id
+LEFT JOIN relationships r ON c.contact_id = r.person_id
+LEFT JOIN share s ON c.contact_id = s.contactid
+LEFT JOIN usershares us ON c.userid = us.current_user_id
+WHERE (c.userid = ? OR (s.share_userid = ? AND us.shared_user_id = ?))
+GROUP BY c.contact_id, c.userid, c.name, c.organization, c.job_title, c.date_of_birth, c.website_url, c.notes, c.tags, c.visible_to_all;
+
+
     `;
   
     pool.query(query, [userId, userId, userId], (error, results) => {
@@ -651,6 +649,8 @@ const router = express.Router();
       }
     });
   });
+  ;
+  
 
   // Get a single contact by ID
   router.get("/:contactId", (req, res) => {
