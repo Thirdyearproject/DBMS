@@ -223,7 +223,7 @@ class _UpdateContactPageState extends State<UpdateContact> {
       'city': city,
       'state': state,
       'pin_code': pinCode,
-      'user': userId,
+      'userid': userId,
       'phone_number1': phoneNumber1,
       'phone_type1': phoneType1,
       'phone_number2': phoneNumber2,
