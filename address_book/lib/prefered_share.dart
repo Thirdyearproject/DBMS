@@ -58,9 +58,10 @@ class _PreferredShareState extends State<PreferredShare> {
       'current_user_id': userId,
       'share_user_ids': _selectedUserIds,
     };
+    print('JSON being sent: $requestData');
     final response = await http.put(
       Uri.parse(
-          'https://localhost:3000/userShares'), // Assuming endpoint for submitting data
+          'http://localhost:3000/userShares'), // Assuming endpoint for submitting data
       body: jsonEncode(requestData),
       headers: {'Content-Type': 'application/json'},
     );
