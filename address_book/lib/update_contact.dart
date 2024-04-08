@@ -526,7 +526,7 @@ class _UpdateContactPageState extends State<UpdateContact> {
                   children: [
                     Expanded(
                       child: TextFormField(
-                        controller: _relationshipTypeController,
+                        // controller: _relationshipTypeController,
                         decoration: const InputDecoration(
                           labelText: 'Relationship Type',
                         ),
@@ -535,7 +535,7 @@ class _UpdateContactPageState extends State<UpdateContact> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: TextFormField(
-                        controller: _tagsController,
+                        // controller: _tagsController,
                         decoration: const InputDecoration(
                           labelText: 'Tags',
                         ),
@@ -548,7 +548,7 @@ class _UpdateContactPageState extends State<UpdateContact> {
                     Expanded(
                       //const SizedBox(height: 16),
                       child: TextFormField(
-                        controller: _notesController,
+                        // controller: _notesController,
                         decoration: const InputDecoration(
                           labelText: 'Notes',
                         ),

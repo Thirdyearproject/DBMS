@@ -293,15 +293,24 @@ class _MyHomePageState extends State<MyHomePage> {
                 // Sliding switch
                 Text('User:'),
                 isLoggedIn
-                    ? Switch(
-                        value: showSpecificNamecards,
-                        onChanged: (value) {
-                          setState(() {
-                            showSpecificNamecards = value;
-                          });
-                          _fetchContacts(); // Refetch contacts when switch changes
-                        },
-                      )
+                    ? Row(
+                          children: [
+                            Text(
+                              userId.toString(), // Replace 'User Name' with the actual user's name
+                              style: TextStyle(fontSize: 16), // Adjust styling as needed
+                            ),
+                            SizedBox(width: 10), // Add some space between the user's name and the switch
+                            Switch(
+                              value: showSpecificNamecards, // Current state of the switch
+                              onChanged: (value) { // Callback function called when switch state changes
+                                setState(() { // Update state inside setState for UI to reflect the change
+                                  showSpecificNamecards = value; // Update the state variable with new value
+                                });
+                                _fetchContacts(); // Call function to fetch contacts based on the updated value
+                              },
+                            ),
+                          ],
+                        )
                     : const SizedBox(), // Placeholder for disabled switch when not logged in
                 // Sign-in/Login button
                 Spacer(),
