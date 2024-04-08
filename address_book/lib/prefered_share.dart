@@ -14,6 +14,7 @@ class _PreferredShareState extends State<PreferredShare> {
   List<User> _users = [];
   List<int> _selectedUserIds = [];
   int? userId;
+  bool _isSubmitting = false; // Add a flag to track submission status
 
   @override
   void initState() {
@@ -24,7 +25,6 @@ class _PreferredShareState extends State<PreferredShare> {
   Future<void> _loadUserIdAndFetchData() async {
     final prefs = await SharedPreferences.getInstance();
     final storedUserId = prefs.getInt('userId');
-
     if (storedUserId != null) {
       setState(() {
         userId = storedUserId;
@@ -54,23 +54,40 @@ class _PreferredShareState extends State<PreferredShare> {
 
   Future<void> _submitSelections() async {
     if (userId == null) return;
+
+    setState(() {
+      _isSubmitting = true; // Set flag to true before making the request
+    });
+
     final requestData = {
       'current_user_id': userId,
       'shared_user_ids': _selectedUserIds,
     };
     print('JSON being sent: $requestData');
-    final response = await http.put(
-      Uri.parse(
-          'http://localhost:3000/userShares'), // Assuming endpoint for submitting data
-      body: jsonEncode(requestData),
-      headers: {'Content-Type': 'application/json'},
-    );
-    if (response.statusCode == 200) {
-      // Handle success, e.g., show success message
-      print('Selections submitted successfully');
-    } else {
-      // Handle error
-      print('Error submitting selections');
+
+    try {
+      final response = await http.put(
+        Uri.parse('http://localhost:3000/userShares'),
+        body: jsonEncode(requestData),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        // Handle success
+        print('Selections submitted successfully');
+        // You might want to navigate to another screen or show a success message
+      } else {
+        // Handle error
+        print('Error submitting selections');
+        // You might want to show an error message
+      }
+    } catch (error) {
+      print('Error during PUT request: $error');
+      // Handle potential network or other errors
+    } finally {
+      setState(() {
+        _isSubmitting = false; // Reset flag regardless of success or failure
+      });
     }
   }
 
@@ -81,8 +98,15 @@ class _PreferredShareState extends State<PreferredShare> {
         title: Text("Preferred Share Settings"),
         actions: [
           IconButton(
-            onPressed: _submitSelections,
-            icon: Icon(Icons.save),
+            onPressed: _isSubmitting
+                ? null
+                : _submitSelections, // Disable button during submission
+            icon: _isSubmitting
+                ? CircularProgressIndicator(
+                    // Show progress indicator while submitting
+                    color: Colors.white,
+                  )
+                : Icon(Icons.save),
           )
         ],
       ),
