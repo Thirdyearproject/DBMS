@@ -202,18 +202,16 @@ const router = express.Router();
        GROUP_CONCAT(DISTINCT e.email_type1) AS email_types1,
        GROUP_CONCAT(DISTINCT e.email_type2) AS email_types2,
        GROUP_CONCAT(DISTINCT e.email_type3) AS email_types3
-FROM contacts c
-LEFT JOIN addresses a ON c.contact_id = a.Address_contact_id
-LEFT JOIN phone_numbers p ON c.contact_id = p.phone_contact_id
-LEFT JOIN emails e ON c.contact_id = e.email_contact_id
-LEFT JOIN relationships r ON c.contact_id = r.person_id
-LEFT JOIN share s ON c.contact_id = s.contactid
-LEFT JOIN usershares us ON c.userid = us.current_user_id
-WHERE (c.userid = ? OR (s.share_userid = ? AND us.shared_user_id = ?))
-GROUP BY c.contact_id, c.userid, c.name, c.organization, c.job_title, c.date_of_birth, c.website_url, c.notes, c.tags, c.visible_to_all;
+    FROM contacts c
+    LEFT JOIN addresses a ON c.contact_id = a.Address_contact_id
+    LEFT JOIN phone_numbers p ON c.contact_id = p.phone_contact_id
+    LEFT JOIN emails e ON c.contact_id = e.email_contact_id
+    LEFT JOIN relationships r ON c.contact_id = r.person_id
+    LEFT JOIN share s ON c.contact_id = s.contactid
+    LEFT JOIN usershares us ON c.userid = us.current_user_id
+    WHERE (c.userid = ? OR (s.share_userid = ? AND us.shared_user_id = ?))
+    `;
 
-
-`;
     const queryParams = [userId, userId, userId];
 
     if (searchQuery) {
@@ -241,6 +239,9 @@ GROUP BY c.contact_id, c.userid, c.name, c.organization, c.job_title, c.date_of_
         queryParams.push('%' + job.toLowerCase() + '%');
     }
 
+    // Add GROUP BY at the end of the query
+    query += ' GROUP BY c.contact_id, c.userid, c.name, c.organization, c.job_title, c.date_of_birth, c.website_url, c.notes, c.tags, c.visible_to_all';
+
     pool.query(query, queryParams, (error, results) => {
         if (error) {
             console.error('Error executing MySQL query:', error);
@@ -254,5 +255,6 @@ GROUP BY c.contact_id, c.userid, c.name, c.organization, c.job_title, c.date_of_
         }
     });
 });
+
 
 module.exports = router;
