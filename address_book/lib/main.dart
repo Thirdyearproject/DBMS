@@ -227,17 +227,32 @@ class _MyHomePageState extends State<MyHomePage> {
         };
         if (isLoggedIn) {
           queryParams['user'] = userId.toString();
-        }
-        print("Sent JSON data: ${jsonEncode(queryParams)}");
-        final uri = Uri.http('localhost:3000', '/filter', queryParams);
-        print(uri);
-        final response = await http.get(uri);
-        if (response.statusCode == 200) {
-          Iterable l = json.decode(response.body);
-          contacts = List<Contact>.from(
-              l.map((model) => Contact.fromJson(model)).toList());
+          print("Sent JSON data: ${jsonEncode(queryParams)}");
+          final uri = Uri.http('localhost:3000', '/filter', queryParams);
+          print(uri);
+          final response = await http.get(uri);
+          if (response.statusCode == 200) {
+            Iterable l = json.decode(response.body);
+            contacts = List<Contact>.from(
+                l.map((model) => Contact.fromJson(model)).toList());
+          } else {
+            throw Exception(
+                'Failed to load contacts: ${response.reasonPhrase}');
+          }
         } else {
-          throw Exception('Failed to load contacts: ${response.reasonPhrase}');
+          print("Sent JSON data: ${jsonEncode(queryParams)}");
+          final uri =
+              Uri.http('localhost:3000', '/filter/notlogin', queryParams);
+          print(uri);
+          final response = await http.get(uri);
+          if (response.statusCode == 200) {
+            Iterable l = json.decode(response.body);
+            contacts = List<Contact>.from(
+                l.map((model) => Contact.fromJson(model)).toList());
+          } else {
+            throw Exception(
+                'Failed to load contacts: ${response.reasonPhrase}');
+          }
         }
       } else {
         final response =
@@ -293,24 +308,15 @@ class _MyHomePageState extends State<MyHomePage> {
                 // Sliding switch
                 Text('User:'),
                 isLoggedIn
-                    ? Row(
-                          children: [
-                            Text(
-                              userId.toString(), // Replace 'User Name' with the actual user's name
-                              style: TextStyle(fontSize: 16), // Adjust styling as needed
-                            ),
-                            SizedBox(width: 10), // Add some space between the user's name and the switch
-                            Switch(
-                              value: showSpecificNamecards, // Current state of the switch
-                              onChanged: (value) { // Callback function called when switch state changes
-                                setState(() { // Update state inside setState for UI to reflect the change
-                                  showSpecificNamecards = value; // Update the state variable with new value
-                                });
-                                _fetchContacts(); // Call function to fetch contacts based on the updated value
-                              },
-                            ),
-                          ],
-                        )
+                    ? Switch(
+                        value: showSpecificNamecards,
+                        onChanged: (value) {
+                          setState(() {
+                            showSpecificNamecards = value;
+                          });
+                          _fetchContacts(); // Refetch contacts when switch changes
+                        },
+                      )
                     : const SizedBox(), // Placeholder for disabled switch when not logged in
                 // Sign-in/Login button
                 Spacer(),
