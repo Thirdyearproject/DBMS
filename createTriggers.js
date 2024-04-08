@@ -188,6 +188,28 @@ function createTriggers() {
             });
         });
     };
+    // Function to create the trigger for username and password not null
+    const createUsernamePasswordNotNullTrigger = () => {
+        const createTriggerQuery = `
+            CREATE TRIGGER check_username_password_not_null
+            BEFORE INSERT ON user
+            FOR EACH ROW
+            BEGIN
+                IF (NEW.username IS NULL OR NEW.password IS NULL) THEN
+                    SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Username and password must not be null';
+                END IF;
+            END`;
+
+        // Execute query to create the trigger
+        pool.query(createTriggerQuery, (error, results, fields) => {
+            if (error) {
+                console.error("Error creating check_username_password_not_null trigger:", error);
+            } else {
+                console.log("check_username_password_not_null trigger created successfully");
+            }
+        });
+    };
 
 
     const initializeTriggers = () => {
@@ -196,12 +218,14 @@ function createTriggers() {
         dropTriggerIfExists('check_phone_number_length');
         dropTriggerIfExists('update_phone_numbers');
         dropTriggerIfExists('unique_phone_number1_update');
+        dropTriggerIfExists('check_username_password_not_null');
 
         // Create new triggers
         createPhoneNumberLengthTrigger();
         createUniquePhoneNumberTrigger();
         createUpdatePhoneNumberLengthTrigger();
         createUniquePhoneNumberUpdateTrigger();
+        createUsernamePasswordNotNullTrigger();
     };
     initializeTriggers();
 }
